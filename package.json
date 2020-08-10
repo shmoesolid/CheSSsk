@@ -1,0 +1,28 @@
+{
+  "name": "chesssk",
+  "version": "1.0.0",
+  "description": "Server authorative room based chess games",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shmoesolid/CheSSsk.git"
+  },
+  "keywords": [
+    "chess"
+  ],
+  "author": "Shane Koehler",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/shmoesolid/CheSSsk/issues"
+  },
+  "homepage": "https://github.com/shmoesolid/CheSSsk#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.9.28",
+    "morgan": "^1.10.0",
+    "socket.io": "^2.3.0"
+  }
+}
