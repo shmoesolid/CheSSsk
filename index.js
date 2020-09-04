@@ -59,7 +59,7 @@ class CheSSsk
         col = LETTER_TO_NUM[ col ];
         row -= 1;
 
-        if (typeof this._grid[ col ][ row ] === 'undefined')
+        if ( this._isOutBounds(col, row) ) //if (typeof this._grid[ col ][ row ] === 'undefined')
             throw "debug_addPiece bad grid location";
 
         this._grid[ col ][ row ] = new Piece(piece, color, locString);
@@ -86,8 +86,8 @@ class CheSSsk
         // set our grid
         this._grid = grid;
 
-	// we set the data
-	return true;
+        // we set the data
+        return true;
     }
 
     /** getGridInJSON
