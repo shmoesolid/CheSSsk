@@ -1,6 +1,6 @@
 {
   "name": "chesssk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chess move validation library based on board data",
   "main": "index.js",
   "scripts": {
