@@ -28,6 +28,7 @@ const NUM_TO_LETTER = Object.freeze([ 'a','b','c','d','e','f','g','h' ]);
 
 /** CheSSsk class
  * 
+ * Author: Shane Koehler
  */
 class CheSSsk
 {
@@ -316,7 +317,8 @@ class CheSSsk
         var moves = [];
 
         // establish x and y
-        var x = y = 0;
+        var x = 0;
+        var y = 0;
 
         // change x and/or y modification based on direction
         switch( dir )
@@ -431,14 +433,14 @@ class CheSSsk
         var inCheck = false;
         
         // get if king is in check by checking all IDs attacking our space
-        node.getAttackers.forEach( id => {
+        node.getAttackers().forEach( id => {
 
             // get first char of ID (which is color of attacking piece)
             if (id.charAt(0) != node.p.color)
             {
                 // we are in check as colors don't match, set true and break
                 inCheck = true;
-                break;
+                return; // use return instead of break in forEach
             }
         });
 
@@ -454,7 +456,7 @@ class CheSSsk
             moves = moves.concat( this._getDiagnals(node, updateAttackers, 1 ));
 
             // get north or south depending on color (ie white king can't move south so why check)
-            moves = move.concat( 
+            moves = moves.concat( 
                 this._getMovesInDirection( 
                     node,
                     (node.p.color == "W") ? Direction.N : Direction.S,
@@ -613,7 +615,7 @@ class CheSSsk
                 var testMoves = this._getMovesInDirection( node, (vertDir + horzDir), updateAttackers, 1 );
 
                 // make sure not empty
-                if (testMoves)
+                if (testMoves.length > 0)
                 {
                     // readability
                     var move = testMoves[0];
@@ -642,7 +644,7 @@ class CheSSsk
 
                     // skip if node doesn't exist or if piece data isn't empty
                     if (newNode === false || !newNode.p)
-                        continue;
+                        return; // use return instead of continue in forEach loops
 
                     // add to moves array
                     moves.push(newNode);
@@ -672,7 +674,7 @@ class CheSSsk
         y -= 1;
 
         // return if grid doesn't exit
-        if (typeof this._grid[x][y] === 'undefined')
+        if ( this._isOutBounds(x, y) ) // if (typeof this._grid[x][y] === 'undefined')
             return false;
 
         // return valid location

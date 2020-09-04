@@ -1,8 +1,8 @@
 {
   "name": "chesssk",
   "version": "1.0.0",
-  "description": "Server authorative room based chess games",
-  "main": "server.js",
+  "description": "Chess move validation library based on board data",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,15 +14,9 @@
     "chess"
   ],
   "author": "Shane Koehler",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/shmoesolid/CheSSsk/issues"
   },
-  "homepage": "https://github.com/shmoesolid/CheSSsk#readme",
-  "dependencies": {
-    "express": "^4.17.1",
-    "mongoose": "^5.9.28",
-    "morgan": "^1.10.0",
-    "socket.io": "^2.3.0"
-  }
+  "homepage": "https://github.com/shmoesolid/CheSSsk#readme"
 }

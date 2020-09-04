@@ -1,4 +1,8 @@
 
+/** config for CheSSsk class
+ * 
+ * Author: Shane Koehler
+ */
 const config = {};
 
 config.PREG_ID = /(wW|bB)[kKqQrRbBnNpP][a-hA-H][1-8]/;
@@ -14,3 +18,5 @@ config.JSON_ERROR_MESSAGE = {
     INVALID_SYNTAX: "Send the right stuff."
 
 };
+
+module.exports = config;
