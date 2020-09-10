@@ -188,9 +188,75 @@ class CheSSsk
      * @param {string} from 
      * @param {string} to 
      */
-    move(from, to)
+    move(from, to, enPassant = "")
     {
-        // ..
+        // get valid moves for from location
+        var response = this.getValidMoves(from);
+
+        // we aren't ok, return full response
+        if (response.status !== "OK")
+            return response;
+
+        // get node both nodes from strings (don't need to check currentNode as getValidMoves already did this)
+        var currentNode = this._getNodeByString(from);
+        var destinationNode = this._getNodeByString(to);
+
+        // our to location is not a valid location to move
+        if (destinationNode === false || !response.results.indexOf( destinationNode ))
+            return { status: "INVALID_DESTINATION" };
+
+        // we have a legit move!  HOOORAAY
+
+        // TODO HANDLE EN PASSANT
+
+        // get node if we have an enPassant location string and if our piece type moving is also a pawn
+        var enPassantNode = (enPassant !== "" && currentNode.p.type === "P") ? this._getNodeByString(enPassant) : false;
+
+        // ok so if we have an enPassant string as a valid move location, we need to get 
+        // the pawn associated that caused this, so..
+        // if white should be able to add 1 to row or Y coord to get that node piece
+        // if black should be able to subtract from row or Y coord to get it
+
+        // remove all our attacking spaces from current node
+        this.getValidMoves(from, UpdateAttackers.REMOVE_SELF);
+
+        // remove attacking spaces if piece in destination node
+        if (destinationNode.p !== null) 
+            this.getValidMoves(to, UpdateAttackers.REMOVE_SELF);
+
+        // if we're dealing with enpassant, get the piece responsible
+        else if (enPassantNode !== false) 
+        {
+            // get our pawn associated with enPassant location
+            // understand this is backwards because lets say white pawn is moving into enPassant node
+            // then we are taking a black piece therefore we subtract 1 from y to get the node below
+            // and if black taking white we add 1 from y as our white pawn should be above it
+            var changeY = ( currentNode.p.color === "W" ) ? enPassantNode.y - 1 : enPassantNode.y + 1;
+
+            // so no with our changeY we can get the node of the pawn piece causing all this chaos
+            var pawnNode = this._grid[ enPassantNode.x ][ changeY ];
+
+            // confirm now our piece info in pawn node is a pawn and not our color
+            if (pawnNode.p.type !== "P" || pawnNode.p.color === currentNode.p.color)
+                return { status: "INVALID_ENPASSANT" };
+
+            // remove our associated pawn attack points
+            var pawnString = NUM_TO_LETTER[ pawnNode.x ] + pawnNode.y;
+            this.getValidMoves(pawnString, UpdateAttackers.REMOVE_SELF);
+        }
+
+        // handle move (a nice little piece swap)
+        var holdDestPiece = destinationNode.p; //|| enPassantNode.p);
+        if (typeof pawnNode !== 'undefined') pawnNode.p = null;
+        destinationNode.p = currentNode.p;
+        currentNode.p = null;
+
+        // update our attacking spaces in new node
+        this.getValidMoves(to, UpdateAttackers.REMOVE_SELF)
+
+        // .. handle taking of a piece
+        // .. handle castling
+        // .. handle pawn on back row
     }
 
     /** getValidMoves
