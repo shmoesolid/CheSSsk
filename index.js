@@ -206,25 +206,19 @@ class CheSSsk
             return { status: "INVALID_DESTINATION" };
 
         // we have a legit move!  HOOORAAY
-
-        // TODO HANDLE EN PASSANT
+        // ..
 
         // get node if we have an enPassant location string and if our piece type moving is also a pawn
         var enPassantNode = (enPassant !== "" && currentNode.p.type === "P") ? this._getNodeByString(enPassant) : false;
 
-        // ok so if we have an enPassant string as a valid move location, we need to get 
-        // the pawn associated that caused this, so..
-        // if white should be able to add 1 to row or Y coord to get that node piece
-        // if black should be able to subtract from row or Y coord to get it
-
         // remove all our attacking spaces from current node
-        this.getValidMoves(from, UpdateAttackers.REMOVE_SELF);
+        this._removeAttackingSpaces(from);
 
         // remove attacking spaces if piece in destination node
-        if (destinationNode.p !== null) 
-            this.getValidMoves(to, UpdateAttackers.REMOVE_SELF);
+        if (destinationNode.p !== null)
+            this._removeAttackingSpaces(to);
 
-        // if we're dealing with enpassant, get the piece responsible
+        // otherwise if we're dealing with enpassant, get the piece responsible
         else if (enPassantNode !== false) 
         {
             // get our pawn associated with enPassant location
@@ -237,26 +231,36 @@ class CheSSsk
             var pawnNode = this._grid[ enPassantNode.x ][ changeY ];
 
             // confirm now our piece info in pawn node is a pawn and not our color
-            if (pawnNode.p.type !== "P" || pawnNode.p.color === currentNode.p.color)
+            if (pawnNode.p === null 
+                || pawnNode.p.type !== "P"
+                || pawnNode.p.color === currentNode.p.color
+            ) {
                 return { status: "INVALID_ENPASSANT" };
+            }
 
             // remove our associated pawn attack points
             var pawnString = NUM_TO_LETTER[ pawnNode.x ] + pawnNode.y;
-            this.getValidMoves(pawnString, UpdateAttackers.REMOVE_SELF);
+            this._removeAttackingSpaces(pawnString);
         }
 
-        // handle move (a nice little piece swap)
-        var holdDestPiece = destinationNode.p; //|| enPassantNode.p);
-        if (typeof pawnNode !== 'undefined') pawnNode.p = null;
+        // handle removed piece if taking one
+        var removedPiece = destinationNode.p;
+        if (typeof pawnNode !== 'undefined') 
+        {
+            removedPiece = pawnNode.p;
+            pawnNode.p = null;
+        }
+
+        // set our piece to destination and clear old
         destinationNode.p = currentNode.p;
         currentNode.p = null;
 
-        // update our attacking spaces in new node
-        this.getValidMoves(to, UpdateAttackers.REMOVE_SELF)
+        // .. TODO handle castling
+        // .. TODO handle pawn on back row
+        // .. TODO handle removedPiece
 
-        // .. handle taking of a piece
-        // .. handle castling
-        // .. handle pawn on back row
+        // update our attacking spaces in new node
+        this._addAttackingSpaces(to);
     }
 
     /** getValidMoves
@@ -720,6 +724,24 @@ class CheSSsk
 
         // return our available moves
         return moves;
+    }
+
+    /** _removeAttackingSpaces
+     * 
+     * @param {string} from 
+     */
+    _removeAttackingSpaces(from)
+    {
+        return this.getValidMoves(from, UpdateAttackers.REMOVE_SELF);
+    }
+
+    /** _addAttackingSpaces
+     * 
+     * @param {string} from 
+     */
+    _addAttackingSpaces(from)
+    {
+        return this.getValidMoves(from, UpdateAttackers.ADD_SELF);
     }
 
     /** _getNodeByString
