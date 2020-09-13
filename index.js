@@ -1,8 +1,8 @@
 
 // BUGS-TO-FIX
 // 
-// pawn can kill north/south.. (should be fixed)
-// king can move into check.. (should be fixed)
+// pawn can kill north/south.. should be fixed now
+// king can move into check.. confirmed fixed
 // enpassant not functional.. should be once implemented database
 // 
 
@@ -484,15 +484,17 @@ class CheSSsk
                 else if (updateAttackers == UpdateAttackers.REMOVE_SELF)
                     currentNode.removeAttackerByID( node.p.getID() );
 
-                // return if colors match as we can't move into a node occupied by our own piece
-                // or if we are a pawn and NOT moving in a diagnal direction
-                // (all diagnal directions are divisible by 3)
-                if (currentNode.p != null 
-                    && (node.p.color == currentNode.p.color
-                        || (node.p == "P" && (dir % 3) !== 0)
-                    )
-                ) {
-                    return moves;
+                // check if moving into area occupied by piece
+                if (currentNode.p != null)
+                {
+                    // return if colors match as we can't move into a node occupied by our own piece
+                    if (node.p.color == currentNode.p.color)
+                        return moves;
+
+                    // if we are a pawn and NOT moving in a diagnal direction
+                    // (all diagnal directions are divisible by 3)
+                    if (node.p.type == "P" && (dir % 3) !== 0)
+                        return moves;
                 }
                     
                 // add to return array as we have valid node we can move to
