@@ -1,4 +1,11 @@
 
+// BUGS-TO-FIX
+// 
+// pawn can kill north/south.. (should be fixed)
+// king can move into check.. (should be fixed)
+// enpassant not functional.. should be once implemented database
+// 
+
 // my lib requires
 const config = require("./config");
 const Node = require("./Node");
@@ -478,9 +485,16 @@ class CheSSsk
                     currentNode.removeAttackerByID( node.p.getID() );
 
                 // return if colors match as we can't move into a node occupied by our own piece
-                if (currentNode.p != null && node.p.color == currentNode.p.color)
+                // or if we are a pawn and NOT moving in a diagnal direction
+                // (all diagnal directions are divisible by 3)
+                if (currentNode.p != null 
+                    && (node.p.color == currentNode.p.color
+                        || (node.p == "P" && (dir % 3) !== 0)
+                    )
+                ) {
                     return moves;
-
+                }
+                    
                 // add to return array as we have valid node we can move to
                 moves.push( currentNode );
 
@@ -488,6 +502,7 @@ class CheSSsk
                 // or if we are only allowed to go X num spaces (0 is no limit)
                 if ( currentNode.p != null || numSpace > 0 && moves.length >= numSpace )
                     return moves;
+
             }
         }
     }
