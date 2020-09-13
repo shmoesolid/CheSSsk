@@ -23,7 +23,7 @@ const UpdateAttackers = Object.freeze({
 }); 
 
 // quick mapping from letter to num and num to letter
-const LETTER_TO_NUM = Object.freeze({ a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:8 });
+const LETTER_TO_NUM = Object.freeze({ a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:7 });
 const NUM_TO_LETTER = Object.freeze([ 'a','b','c','d','e','f','g','h' ]);
 
 /** CheSSsk class
@@ -187,6 +187,7 @@ class CheSSsk
      * 
      * @param {string} from 
      * @param {string} to 
+     * @param {string} enPassant
      */
     move(from, to, enPassant = "")
     {
@@ -254,6 +255,9 @@ class CheSSsk
         // set our piece to destination and clear old
         destinationNode.p = currentNode.p;
         currentNode.p = null;
+
+        // update hasMoved bool
+        destinationNode.p.hasMoved = true;
 
         // .. TODO handle castling
         // .. TODO handle pawn on back row
