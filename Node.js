@@ -68,8 +68,11 @@ class Node
      */
     removeAttackerByID(id)
     {
-        if ((key = this._attackers.indexOf(id)) !== -1)
-            this._attackers.splice(key, 1);
+        // search for key/index by id
+        var key = this._attackers.indexOf(id);
+
+        // if found, remove it
+        if (key !== -1) this._attackers.splice(key, 1);
     }
 }
 
