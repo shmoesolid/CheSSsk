@@ -203,7 +203,7 @@ class CheSSsk
         var destinationNode = this._getNodeByString(to);
 
         // our to location is not a valid location to move
-        if (destinationNode === false || !response.results.indexOf( destinationNode ))
+        if (destinationNode === false || response.results.indexOf( destinationNode ) === -1)
             return { status: "INVALID_DESTINATION" };
 
         // we have a legit move!  HOOORAAY
@@ -264,7 +264,7 @@ class CheSSsk
         // .. TODO handle removedPiece
 
         // update our attacking spaces in new node
-        this._addAttackingSpaces(to);
+        return this._addAttackingSpaces(to);
     }
 
     /** getValidMoves
