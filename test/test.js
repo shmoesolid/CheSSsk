@@ -1,10 +1,14 @@
 const CheSSsk = require("../");
 
-var game = new CheSSsk();
+var game1 = new CheSSsk();
 
-game.setupNewGame();
-console.log(game._grid);
+game1.setupNewGame();
+console.log(game1._grid);
 
-var string = game.getGridInJSON();
-game.setGridFromJSON(string);
-console.log(game._grid);
+var string = game1.getGridInJSON();
+//console.log(string);
+
+var game2 = new CheSSsk();
+
+game2.setGridFromJSON(string);
+console.log(game2._grid);

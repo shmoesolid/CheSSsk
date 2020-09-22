@@ -101,15 +101,17 @@ class CheSSsk
             {
                 // get references for readability
                 var curObj = grid[x][y];
-                var curGrid = this._grid[x][y];
 
-                // create nodes and pieces
-                curGrid = new Node(curObj.x, curObj.y);
+                // create node and piece objects
+                this._grid[x][y] = new Node(curObj.x, curObj.y);
                 if (curObj.p !== null)
                 {
-                    curGrid.p = new Piece(curObj.p.type, curObj.p.color, curObj.p._id);
-                    curGrid.p.hasMoved = curObj.p.hasMoved;
+                    this._grid[x][y].p = new Piece(curObj.p.type, curObj.p.color, curObj.p._id);
+                    this._grid[x][y].p.hasMoved = curObj.p.hasMoved;
                 }
+
+                // update attackers array
+                this._grid[x][y]._attackers = curObj._attackers;
             }
         }
 
