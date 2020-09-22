@@ -5,7 +5,8 @@
  */
 const config = {};
 
-config.PREG_ID = /(wW|bB)[kKqQrRbBnNpP][a-hA-H][1-8]/;
+//config.PREG_ID = /(wW|bB)[kKqQrRbBnNpP][a-hA-H][1-8]/; // this is wrong
+config.PREG_ID = /(w|W|b|B)(k|K|q|Q|r|R|b|B|n|N|p|P)[a-hA-H][1-8]/; // confirmed working
 config.PREG_LOCATION = /[a-hA-H][1-8]/;
 
 config.JSON_ERROR_MESSAGE = {

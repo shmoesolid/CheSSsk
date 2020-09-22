@@ -22,7 +22,7 @@ class Piece
         this.hasMoved = false;
 
         // we have an actual ID submitted, set and return
-        if ( arg.match(config.PREG_ID) )
+        if ( arg.match(config.PREG_ID) !== null )
         {
             this._id = arg;
             return;

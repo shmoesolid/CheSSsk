@@ -616,7 +616,7 @@ class CheSSsk
                 if ( rookNode.p != null && !rookNode.p.hasMoved )
                 {
                     // set our direction based on which column
-                    var direction = (col == 1) ? Direction.W : Direction.E;
+                    var direction = (col == 0) ? Direction.W : Direction.E;
 
                     // try to move 2 spaces in corresponding direction
                     moves = moves.concat( this._getMovesInDirection(node, direction, updateAttackers, 2));

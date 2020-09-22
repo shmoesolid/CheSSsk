@@ -1,14 +1,19 @@
-const CheSSsk = require("../");
+const config = require("../config");
 
-var game1 = new CheSSsk();
+var string = "BqH0";
+console.log( string.match(config.PREG_ID) );
 
-game1.setupNewGame();
-console.log(game1._grid);
+// const CheSSsk = require("../");
 
-var string = game1.getGridInJSON();
-//console.log(string);
+// var game1 = new CheSSsk();
 
-var game2 = new CheSSsk();
+// game1.setupNewGame();
+// console.log(game1._grid);
 
-game2.setGridFromJSON(string);
-console.log(game2._grid);
+// var string = game1.getGridInJSON();
+// //console.log(string);
+
+// var game2 = new CheSSsk();
+
+// game2.setGridFromJSON(string);
+// console.log(game2._grid);
