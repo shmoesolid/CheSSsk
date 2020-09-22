@@ -82,6 +82,10 @@ class CheSSsk
         // convert to object
         var grid = JSON.parse(jsonGameData);
 
+        // return if no data
+        if (grid === null)
+            return false;
+
         // count data
         var count = 0;
         grid.forEach( a2d => count += a2d.length )
@@ -90,8 +94,24 @@ class CheSSsk
         if (count != 64)
             return false;
 
-        // set our grid
-        this._grid = grid;
+        // go through and convert generic objects into actual Nodes and Pieces
+        for (var x = 0; x < 8; x++)
+        {
+            for (var y = 0; y < 8; y++)
+            {
+                // get references for readability
+                var curObj = grid[x][y];
+                var curGrid = this._grid[x][y];
+
+                // create nodes and pieces
+                curGrid = new Node(curObj.x, curObj.y);
+                if (curObj.p !== null)
+                {
+                    curGrid.p = new Piece(curObj.p.type, curObj.p.color, curObj.p._id);
+                    curGrid.p.hasMoved = curObj.p.hasMoved;
+                }
+            }
+        }
 
         // we set the data
         return true;
@@ -102,7 +122,7 @@ class CheSSsk
      */
     getGridInJSON()
     {
-        return JSON.stringify(this._grid);
+        return JSON.stringify(this._grid); // this strips function scope
     }
 
     /** setupNewGame
@@ -195,8 +215,9 @@ class CheSSsk
      * @param {string} from 
      * @param {string} to 
      * @param {string} enPassant
+     * @param {boolean} forceMove
      */
-    move(from, to, enPassant = "")
+    move(from, to, enPassant = "", forceMove = false)
     {
         // get valid moves for from location
         var response = this.getValidMoves(from);
@@ -210,11 +231,11 @@ class CheSSsk
         var destinationNode = this._getNodeByString(to);
 
         // our to location is not a valid location to move
-        if (destinationNode === false || response.results.indexOf( destinationNode ) === -1)
+        if ( !forceMove && (destinationNode === false || response.results.indexOf( destinationNode ) === -1) )
             return { status: "INVALID_DESTINATION" };
 
         // we have a legit move!  HOOORAAY
-        // ..
+        // or being forced (only used in castling so far)
 
         // get node if we have an enPassant location string and if our piece type moving is also a pawn
         var enPassantNode = (enPassant !== "" && currentNode.p.type === "P") ? this._getNodeByString(enPassant) : false;
@@ -259,15 +280,41 @@ class CheSSsk
             pawnNode.p = null;
         }
 
-        // set our piece to destination and clear old
+        // set our piece to destination
         destinationNode.p = currentNode.p;
-        currentNode.p = null;
+        
+        // handle castling
+        if (destinationNode.p.type === "K" // piece is king
+            && destinationNode.p.hasMoved == false // piece hasn't moved
+            && Math.abs(destinationNode.x - currentNode.x) > 1 // piece moved more than 1 space
+        ) {
+            // get move difference/distance
+            var diff = destinationNode.x - currentNode.x;
+
+            // clear old (needs to be done before rook move)
+            currentNode.p = null;
+
+            // make sure king moved 2 spaces
+            if (Math.abs(diff) == 2)
+            {
+                // set rook coords based on difference and color
+                // if diff is negative, queen side castle
+                // if diff is postive, king side castle
+                var rookFromX = (diff < 0) ? "a" : "h";
+                var rookToX = (diff < 0) ? "d" : "f";
+                var rookY = (destinationNode.p.color === "W") ? "1" : "8";
+
+                // use data to force move the rook
+                this.move(rookFromX + rookY, rookToX + rookY, "", true);
+            }
+        }
+        // clear old
+        else currentNode.p = null; 
 
         // update hasMoved bool
         destinationNode.p.hasMoved = true;
 
-        // .. TODO handle castling
-        // .. TODO handle pawn on back row
+        // .. TODO handle pawn on back row (needs to be separate method called)
         // .. TODO handle removedPiece
 
         // update our attacking spaces in new node
