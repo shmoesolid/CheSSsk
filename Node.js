@@ -34,17 +34,6 @@ class Node
      */
     isEnemyAttacking(color)
     {
-        // duh can't use forEach here...
-        // loop through attackers
-        // this._attackers.forEach(
-        //     (id) => {
-        //         // get first char of id (color of attacking piece)
-        //         // return true if opposite of param
-        //         if (id.charAt(0) != color)
-        //             return true;
-        //     }
-        // );
-
         // loop through attackers and get first char of id (color of attacking piece)
         // and return true if we find any of the opposite color
         for (var i=0; i<this._attackers.length; i++)

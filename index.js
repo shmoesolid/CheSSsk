@@ -1,7 +1,22 @@
+/** CheSSsk Library
+ * 
+ * Author: Shane Koehler
+ */
 
 // BUGS-TO-FIX
 // 
-// pawn can kill north/south.. should be fixed now
+// ->HAD ISSUE WITH ATTACKING SPACE CONTAINING NON-ATTACKING PIECE
+//
+// CAUSE: moving a piece in front of one that moves multiple spaces (ie queen, rook, bishop)
+// does NOT block them
+//
+// TO FIX: when moving a piece, need to go update all of the pieces attacking that node
+// confirm piece can move, get destination attackers, go through and remove all their attacking spaces
+// then move the piece and clear old node, go back through same attackers and add back the new attacks
+//
+// UPDATE: possibly fixed, needs live testing
+//
+// pawn can kill north/south.. confirm fixed
 // king can move into check.. confirmed fixed
 // enpassant not functional.. should be once implemented database
 // 
@@ -35,7 +50,6 @@ const NUM_TO_LETTER = Object.freeze([ 'a','b','c','d','e','f','g','h' ]);
 
 /** CheSSsk class
  * 
- * Author: Shane Koehler
  */
 class CheSSsk
 {
@@ -280,7 +294,22 @@ class CheSSsk
         {
             removedPiece = pawnNode.p;
             pawnNode.p = null;
+
+            // get and refresh the pawn node attacks if enPassant
+            // no piece will move into this space so we can just remove
+            // and add in one swoop
+            var pawnAttackers = this._getNodeStringsByPieceIDs(pawnNode.getAttackers());
+            this._removeAttackingSpaces(pawnAttackers);
+            this._addAttackingSpaces(pawnAttackers);
         }
+
+        // get all pieces' locations attacking currentNode and destinationNode
+        var oldNodeAttackers = this._getNodeStringsByPieceIDs(currentNode.getAttackers());
+        var newNodeAttackers = this._getNodeStringsByPieceIDs(destinationNode.getAttackers());
+
+        // remove those attackers from both (need to make move before adding back)
+        this._removeAttackingSpaces(oldNodeAttackers);
+        this._removeAttackingSpaces(newNodeAttackers);
 
         // set our piece to destination
         destinationNode.p = currentNode.p;
@@ -317,10 +346,22 @@ class CheSSsk
         destinationNode.p.hasMoved = true;
 
         // .. TODO handle pawn on back row (needs to be separate method called)
+        // .. TODO handle returning whether pawn move caused enPassant
         // .. TODO handle removedPiece
 
-        // update our attacking spaces in new node
-        return this._addAttackingSpaces(to);
+        // update our attacking spaces for our moved piece
+        // and all the other attacking pieces for both old and new spaces
+        this._addAttackingSpaces(to);
+        this._addAttackingSpaces(oldNodeAttackers);
+        this._addAttackingSpaces(newNodeAttackers);
+
+        // return with various updates
+        return {
+            status: "OK", 
+            removed: removedPiece,
+            enPassant: "", // TODO
+            pawnExchange: "" // TODO
+        };
     }
 
     /** getValidMoves
@@ -802,7 +843,19 @@ class CheSSsk
      */
     _removeAttackingSpaces(from)
     {
-        return this.getValidMoves(from, UpdateAttackers.REMOVE_SELF);
+        if (typeof from === 'string')
+        {
+            this.getValidMoves(from, UpdateAttackers.REMOVE_SELF);
+            return true;
+        }
+        
+        else if (Array.isArray(from))
+        {
+            from.forEach( item => {
+                this.getValidMoves(item, UpdateAttackers.REMOVE_SELF);
+            });
+            return true;
+        }
     }
 
     /** _addAttackingSpaces
@@ -811,7 +864,54 @@ class CheSSsk
      */
     _addAttackingSpaces(from)
     {
-        return this.getValidMoves(from, UpdateAttackers.ADD_SELF);
+        if (typeof from === 'string')
+        {
+            this.getValidMoves(from, UpdateAttackers.ADD_SELF);
+            return true;
+        }
+        
+        else if (Array.isArray(from))
+        {
+            from.forEach( item => {
+                this.getValidMoves(item, UpdateAttackers.ADD_SELF);
+            });
+            return true;
+        }
+    }
+
+    /** _getNodeByPieceIDs
+     * 
+     * @param {Array} ids (of )
+     */
+    _getNodeStringsByPieceIDs(ids)
+    {
+        // return if empty
+        if (!ids) return [];
+
+        // prime return value
+        var rtnStrings = [];
+
+        // go through all grid
+        for (var x = 0; x < 8; x++)
+        {
+            for (var y = 0; y < 8; y++)
+            {
+                // readability
+                var curNode = this._grid[x][y];
+
+                // check if piece is null
+                if (curNode.p === null)
+                    continue;
+
+                // convert and add if within out list
+                if (ids.indexOf(curNode.p._id) !== -1)
+                    rtnStrings.push(LETTER_TO_NUM[ x ] + (y-1));
+                    
+            }
+        }
+
+        // return even if empty (shouldn't be at this point)
+        return rtnStrings;
     }
 
     /** _getNodeByString
