@@ -350,7 +350,6 @@ class CheSSsk
 
         // .. TODO handle pawn on back row (needs to be separate method called)
         // .. TODO handle returning whether pawn move caused enPassant
-        // .. TODO handle removedPiece
 
         // update our attacking spaces for our moved piece
         // and all the other attacking pieces for both old and new spaces
@@ -358,12 +357,16 @@ class CheSSsk
         this._addAttackingSpaces(oldNodeAttackers);
         this._addAttackingSpaces(newNodeAttackers);
 
+        // .. TODO check whether our move puts our own king in check
+        // if, after everything we did
+
         // return with various updates
         return {
             status: "OK", 
-            removed: removedPiece,
+            pieceTaken: removedPiece,
             enPassant: "", // TODO
-            pawnExchange: "" // TODO
+            pawnExchange: "", // TODO
+            kingInCheck: "" // TODO, move places other king in check
         };
     }
 
@@ -849,14 +852,24 @@ class CheSSsk
         // if we know where king is
         if (node) return node.isEnemyAttacking(node.p.color);
 
-        // error if not correct string passed
-        if (color !== "W" && color !== "B")
-            throw "_isKingCheck color string must be W or B";
+        // setup vars
+        var start, end;
 
-        // otherwise search for it
-        for (var x = 0; x < 8; x++)
+        // set based on color
+        if (color == "W") start = 0, end = 8;
+        else if (color == "B") start = 7, end = -1;
+        else throw "_isKingCheck color string must be W or B";
+
+        // update our start vars
+        var x = start, y = start;
+        
+        // loop through grid, doing it this way should be quicker as
+        // black king is mostly at the end if going forward
+        // go from 7 to 0 if black, go from 0 to 7 if white
+        // also work through all columns in each row instead of rows in each column
+        while (y !== end) 
         {
-            for (var y = 0; y < 8; y++)
+            while (x !== end) 
             {
                 var node = this._grid[x][y];
                 if (node.p !== null 
@@ -865,8 +878,29 @@ class CheSSsk
                 ) {
                     return node.isEnemyAttacking(color);
                 }
+                x += color == "W" ? 1 : -1;
             }
+            y += color == "W" ? 1 : -1;
         }
+
+        // error if not correct string passed
+        // if (color !== "W" && color !== "B")
+        //     throw "_isKingCheck color string must be W or B";
+
+        // otherwise search for it
+        // for (var x = 0; x < 8; x++)
+        // {
+        //     for (var y = 0; y < 8; y++)
+        //     {
+        //         var node = this._grid[x][y];
+        //         if (node.p !== null 
+        //             && node.p.type === "K"
+        //             && node.p.color === color
+        //         ) {
+        //             return node.isEnemyAttacking(color);
+        //         }
+        //     }
+        // }
 
         // if not returned by now, something wrong, king not on board
         throw "_isKingCheck no matching king found on board!";
