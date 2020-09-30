@@ -235,6 +235,9 @@ class CheSSsk
      */
     move(from, to, enPassant = "", forceMove = false)
     {
+        // copy without reference just in case we have to fallback
+        const gridCopy = this._grid.splice();
+
         // get valid moves for from location
         var response = this.getValidMoves(from);
 
@@ -610,20 +613,8 @@ class CheSSsk
         // establish moves array
         var moves = [];
 
-        // establish/prime inCheck bool
-        var inCheck = false;
-        
-        // get if king is in check by checking all IDs attacking our space
-        node.getAttackers().forEach( id => {
-
-            // get first char of ID (which is color of attacking piece)
-            if (id.charAt(0) != node.p.color)
-            {
-                // we are in check as colors don't match, set true and break
-                inCheck = true;
-                return; // use return instead of break in forEach
-            }
-        });
+        // get if king is in check
+        var inCheck = this._isKingCheck(-1, node);
 
         // king has not moved or has moved but is in check
         // get all directions 1 space
@@ -654,10 +645,22 @@ class CheSSsk
                 var rookNode = this._grid[ col ][ node.y ];
 
                 // make sure piece exists and hasn't moved (pointless to confirm piece as rook too)
-                if ( rookNode.p != null && !rookNode.p.hasMoved )
-                {
+                // and make sure there is no enemy piece attacking our rook
+                if ( rookNode.p != null 
+                    && !rookNode.p.hasMoved 
+                    && !rookNode.isEnemyAttacking(rookNode.p.color) 
+                ) {
                     // set our direction based on which column
                     var direction = (col == 0) ? Direction.W : Direction.E;
+
+                    // if Direction.W, check col 1 for enemy attacking
+                    // queen side castle, there is 1 space left unchecked
+                    // skip if enemy attacking it
+                    if (direction == Direction.W
+                        && this._gird[ 1 ][ node.y ].isEnemyAttacking(node.p.color)
+                    ) {
+                        continue;
+                    }
 
                     // try to move 2 spaces in corresponding direction
                     moves = moves.concat( this._getMovesInDirection(node, direction, updateAttackers, 2));
@@ -837,6 +840,38 @@ class CheSSsk
         return moves;
     }
 
+    /** _isKingCheck
+     * 
+     * @param {string} color // upper case
+     */
+    _isKingCheck(color, node = null)
+    {
+        // if we know where king is
+        if (node) return node.isEnemyAttacking(node.p.color);
+
+        // error if not correct string passed
+        if (color !== "W" && color !== "B")
+            throw "_isKingCheck color string must be W or B";
+
+        // otherwise search for it
+        for (var x = 0; x < 8; x++)
+        {
+            for (var y = 0; y < 8; y++)
+            {
+                var node = this._grid[x][y];
+                if (node.p !== null 
+                    && node.p.type === "K"
+                    && node.p.color === color
+                ) {
+                    return node.isEnemyAttacking(color);
+                }
+            }
+        }
+
+        // if not returned by now, something wrong, king not on board
+        throw "_isKingCheck no matching king found on board!";
+    }
+
     /** _removeAttackingSpaces
      * 
      * @param {string} from 
@@ -856,6 +891,9 @@ class CheSSsk
             });
             return true;
         }
+
+        // error if made it this far
+        throw "_removeAttackingSpaces from must be string or array of strings";
     }
 
     /** _addAttackingSpaces
@@ -877,6 +915,9 @@ class CheSSsk
             });
             return true;
         }
+
+        // error if made it this far
+        throw "_addAttackingSpaces from must be string or array of strings";
     }
 
     /** _getNodeByPieceIDs
