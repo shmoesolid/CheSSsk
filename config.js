@@ -9,7 +9,7 @@ const config = {};
 config.PREG_ID = /(w|W|b|B)(k|K|q|Q|r|R|b|B|n|N|p|P)[a-hA-H][1-8]/; // confirmed working
 config.PREG_LOCATION = /[a-hA-H][1-8]/;
 
-config.JSON_ERROR_MESSAGE = {
+config.MESSAGE = {
 
     INVALID_LOCATION: "The location you requested is either not proper format or out of bounds of our grid.",
     INVALID_DESTINATION: "The location you want to move to is not a valid location to move to.",

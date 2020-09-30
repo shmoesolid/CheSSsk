@@ -251,7 +251,7 @@ class CheSSsk
 
         // our to location is not a valid location to move
         if ( !forceMove && (destinationNode === false || response.results.indexOf( destinationNode ) === -1) )
-            return { status: "INVALID_DESTINATION" };
+            return { status: "INVALID_DESTINATION", message: config.MESSAGE["INVALID_DESTINATION"] };
 
         // we have a legit move!  HOOORAAY
         // or being forced (only used in castling so far)
@@ -283,7 +283,7 @@ class CheSSsk
                 || pawnNode.p.type !== "P"
                 || pawnNode.p.color === currentNode.p.color
             ) {
-                return { status: "INVALID_ENPASSANT" };
+                return { status: "INVALID_ENPASSANT", message: config.MESSAGE["INVALID_ENPASSANT"] };
             }
 
             // remove our associated pawn attack points
@@ -388,11 +388,11 @@ class CheSSsk
 
         // return if not a valid location
         if (currentNode === false)
-            return { status: "INVALID_LOCATION" };
+            return { status: "INVALID_LOCATION", message: config.MESSAGE["INVALID_LOCATION"] };
 
         // confirm piece exists
         if (currentNode.p == null)
-            return { status: "NULL_PIECE" };
+            return { status: "NULL_PIECE", message: config.MESSAGE["NULL_PIECE"] };
 
         // know what kind of piece we are moving so we can setup proper algo
         switch ( currentNode.p.type )
@@ -416,7 +416,7 @@ class CheSSsk
                 return { status: "OK", results: this._getPawnMoves( currentNode, updateAttackers, enPassant )};
 
             default:
-                return { status: "INVALID_TYPE" };
+                return { status: "INVALID_TYPE", message: config.MESSAGE["INVALID_TYPE"] };
         }
     }
 
@@ -649,21 +649,10 @@ class CheSSsk
 
                 // make sure piece exists and hasn't moved (pointless to confirm piece as rook too)
                 // and make sure there is no enemy piece attacking our rook
-                if ( rookNode.p != null 
-                    && !rookNode.p.hasMoved 
-                    && !rookNode.isEnemyAttacking(rookNode.p.color) 
-                ) {
+                if ( rookNode.p != null && !rookNode.p.hasMoved ) 
+                {
                     // set our direction based on which column
                     var direction = (col == 0) ? Direction.W : Direction.E;
-
-                    // if Direction.W, check col 1 for enemy attacking
-                    // queen side castle, there is 1 space left unchecked
-                    // skip if enemy attacking it
-                    if (direction == Direction.W
-                        && this._gird[ 1 ][ node.y ].isEnemyAttacking(node.p.color)
-                    ) {
-                        continue;
-                    }
 
                     // try to move 2 spaces in corresponding direction
                     moves = moves.concat( this._getMovesInDirection(node, direction, updateAttackers, 2));
@@ -875,9 +864,9 @@ class CheSSsk
                 ) {
                     return node.isEnemyAttacking(color);
                 }
-                x += color == "W" ? 1 : -1;
+                x += (color == "W") ? 1 : -1;
             }
-            y += color == "W" ? 1 : -1;
+            y += (color == "W") ? 1 : -1;
         }
 
         // error if not correct string passed
