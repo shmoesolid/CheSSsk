@@ -853,15 +853,12 @@ class CheSSsk
         if (node) return node.isEnemyAttacking(node.p.color);
 
         // setup vars
-        var start, end;
+        var x, y, end;
 
         // set based on color
-        if (color == "W") start = 0, end = 8;
-        else if (color == "B") start = 7, end = -1;
+        if (color == "W") x = 0, y = 0, end = 8;
+        else if (color == "B") x = 7, y = 7, end = -1;
         else throw "_isKingCheck color string must be W or B";
-
-        // update our start vars
-        var x = start, y = start;
         
         // loop through grid, doing it this way should be quicker as
         // black king is mostly at the end if going forward
