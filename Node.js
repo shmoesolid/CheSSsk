@@ -42,8 +42,6 @@ class Node
                 )
         );
 
-        console.log(filteredAttackers);
-
         return filteredAttackers;
     }
 

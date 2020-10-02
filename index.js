@@ -775,6 +775,7 @@ class CheSSsk
         // allow only moves where enemy is not attacking
         moves = moves.filter( move => !move.isEnemyAttacking(node.p.color) );
 
+        // just return if adding/removing attackers
         if (updateAttackers != UpdateAttackers.NO)
             return moves;
 
@@ -785,8 +786,6 @@ class CheSSsk
                 types: ["R", "B", "Q"] // only rooks/bishops/queen are needed for this
             }
         );
-
-        console.log("king attackers", kingAttackers);
 
         // go through each attacker if they exist
         for (var i=0; i<kingAttackers.length; i++)
