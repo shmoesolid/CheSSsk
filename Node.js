@@ -32,17 +32,19 @@ class Node
         if (!filter)
             return this._attackers;
 
-        // return mapped copy with items we want only
-        var filteredAttackers = this._attackers.filter( id => 
-                (typeof filter.color === 'string' && id.charAt(0) == filter.color)
-                ||
-                (typeof filter.types !== 'undefined' 
-                    && Array.isArray(filter.types) 
-                    && filter.types.indexOf( id.charAt(1) ) !== -1
-                )
-        );
+        // copy attackers
+        var filtered = this._attackers.splice();
 
-        return filteredAttackers;
+        // do color first
+        if (typeof filter.color === 'string')
+            filtered = filtered.filter( id => id.charAt(0) == filter.color);
+
+        // now do type
+        if (typeof filter.types !== 'undefined' && Array.isArray(filter.types))
+            filtered = filtered.filter( id => filter.types.indexOf( id.charAt(1) ) !== -1)
+
+        // return
+        return filtered;
     }
 
     /** isEnemyAttacking
