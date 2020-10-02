@@ -440,40 +440,71 @@ class CheSSsk
                 return { status: "INVALID_TYPE", message: config.MESSAGE["INVALID_TYPE"] };
         }
 
-        // TODO handle check of our king if not moving our king
-        // ..
-
         // return if we are the king, below doesn't matter
         if ( currentNode.p.type === "K")
             return { status: "OK", results: moves };
+
+        // return if we are updating (adding or removing) attackers
+        if (updateAttackers != UpdateAttackers.NO)
+            return { status: "OK", results: moves };
+
+        // the below handles king check and restricts allowed movement
+        // ie is the piece we're trying to move blocking an otherwise check?
+        // ie is our king in check and does our move eleviate that by blocking or taking a piece
+        // ..
+        
+        // get our king's node (we use this regardless)
+        var kingNode = this._getKingNode(currentNode.p.color);
         
         // need to get our node's opposite color attackers
-        var ourAttackers = currentNode.getAttackers({ 
-            color: (currentNode.p.color === "W") ? "B" : "W", // opposite color
-            types: ["R", "B", "Q"] // only rooks/bishops/queen are needed for this
-        });
+        var ourAttackers = currentNode.getAttackers(
+            { 
+                color: (currentNode.p.color === "W") ? "B" : "W", // opposite color
+                types: ["R", "B", "Q"] // only rooks/bishops/queen are needed for this
+            }
+        );
 
         // confirm we have attackers
         if (ourAttackers.length > 0)
         {
-            // get our king's node
-            var kingNode = this._getKingNode(currentNode.p.color);
+            // get our direction to our king
+            var dirMeToKing = this._getDirectionInRadians(currentNode, kingNode);
 
-            // get our direction to the king
-            var dirToKing = Math.atan2( kingNode.y - currentNode.y, kingNode.x - currentNode.x );
-            
+            // go through our attackers and compare directions
+            for (var i=0; i<ourAttackers.length; i++)
+            {
+                // get needed data
+                var [ type, color, col, row ] = ourAttackers[i].split('');
+                var attackerNode = this._getNodeByString(col+row);
+                var dirAttackerToMe = this._getDirectionInRadians(attackerNode, currentNode);
+
+                // skip if we do not share same direction to king
+                if (dirAttackerToMe !== dirMeToKing)
+                    continue;
+                
+                // we have an attacker that requires our attention
+                // we can only move in nodes that are inbetween attacker and our king
+                // can do this by simply comparing each move direction to king
+                moves = moves.filter( 
+                    node => this._getDirectionInRadians( node, kingNode ) == dirMeToKing
+                );
+            }
         }
 
-        // need to get their directions they are attacking currentNode
-        // get currentNode's attacking direction to it's color king
-        // if those directions are matching then if we move off that line king will be in check
-        // so need to make sure our valid movements are those only along that axis
-
-        // need to get our king opposite color attackers
-        // typically should mostly be 1, rarely 2, never any more than that via standard rules
+        // need to get our king opposite color attackers (ANY piece at this point)
+        // should mostly be 0 or 1, rarely 2, never any more than that via standard rules
+        var kingAttackers = kingNode.getAttackers(
+            {
+                color: (currentNode.p.color === "W") ? "B" : "W", // opposite color
+            }
+        );
+        
         // if there are 2 attackers, only king moves allowed 
         // if any of our valid moves so far corresponds with the position of the attacker then it is still 
         // allowed for the kill, unless there is 2 then neither is allowed
+
+        // test
+        return { status: "OK", results: moves };
         
     }
 
@@ -896,12 +927,15 @@ class CheSSsk
     _getKingNode(color)
     {
         // setup vars
-        var x, y, end;
+        var start, end;
 
         // set based on color
-        if (color === "W") x = 0, y = 0, end = 8;
-        else if (color === "B") x = 7, y = 7, end = -1;
+        if (color === "W") start = 0, end = 8;
+        else if (color === "B") start = 7, end = -1;
         else throw "_getKingNode color string must be W or B";
+
+        // init vars
+        var x = start, y = start;
 
         // loop through grid, doing it this way should be quicker as
         // black king is mostly at the end if going forward
@@ -918,32 +952,14 @@ class CheSSsk
                 ) {
                     return node;
                 }
-                x += (color == "W") ? 1 : -1;
+                x += (color == "W") ? 1 : -1; // adjust x
             }
-            y += (color == "W") ? 1 : -1;
+            x = start; // reset x
+            y += (color == "W") ? 1 : -1; // adjust y
         }
 
         // if not returned by now, something wrong, king not on board, should NEVER be
         throw "_getKingNode no matching king found on board!";
-
-        // HOLDING for now until above confirmed
-        // error if not correct string passed
-        // if (color !== "W" && color !== "B")
-        //     throw "_isKingCheck color string must be W or B";
-        // otherwise search for it
-        // for (var x = 0; x < 8; x++)
-        // {
-        //     for (var y = 0; y < 8; y++)
-        //     {
-        //         var node = this._grid[x][y];
-        //         if (node.p !== null 
-        //             && node.p.type === "K"
-        //             && node.p.color === color
-        //         ) {
-        //             return node.isEnemyAttacking(color);
-        //         }
-        //     }
-        // }
     }
 
     /** _isKingCheck
@@ -1086,6 +1102,26 @@ class CheSSsk
 
         // otherwise false
         return false;
+    }
+
+    /** _getDirectionInDegrees
+     * 
+     * @param {Node} from 
+     * @param {Node} to 
+     */
+    _getDirectionInDegrees(from, to)
+    {
+        return Math.atan2( to.y - from.y, to.x - from.x) * (180/Math.PI) - 90;
+    }
+
+    /** _getDirectionInRadians
+     * 
+     * @param {Node} from 
+     * @param {Node} to 
+     */
+    _getDirectionInRadians(from, to)
+    {
+        return Math.atan2( to.y - from.y, to.x - from.x);
     }
 }
 

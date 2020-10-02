@@ -26,23 +26,22 @@ class Node
      * 
      * supports { color: string, types: array of strings }
      */
-    getAttackers(filter = {})
+    getAttackers(filter = null)
     {
         // no filter, return all
         if (!filter)
             return this._attackers;
 
         // return mapped copy with items we want only
-        return this._attackers.map( id => {
-            if ((typeof filter.color === 'string' && id.charAt(0) == filter.color)
+        var filteredAttackers = this._attackers.filter( id => 
+                (typeof filter.color === 'string' && id.charAt(0) == filter.color)
                 || (typeof filter.types !== 'undefined' 
                     && Array.isArray(filter.types) 
                     && filter.types.indexOf( id.charAt(1) ) !== -1
                 )
-            ) { 
-                return id;
-            }
-        });
+        );
+
+        return filteredAttackers;
     }
 
     /** isEnemyAttacking
