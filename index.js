@@ -67,11 +67,11 @@ class CheSSsk
 
     /** debug_addPiece
      * 
-     * @param {string} piece 
      * @param {string} color 
+     * @param {string} piece 
      * @param {string} locString 
      */
-    debug_addPiece(piece, color, locString, hasMoved=false)
+    debug_addPiece(color, piece, locString, hasMoved=false)
     {
         if (!locString.match(config.PREG_LOCATION))
             throw "debug_addPiece bad location format";
@@ -472,7 +472,6 @@ class CheSSsk
 
             // get the actual locations by ID
             var attackerLocStrings = this._getNodeStringsByPieceIDs(ourAttackers);
-            console.log(attackerLocStrings);
 
             // go through our attackers and compare directions
             for (var i=0; i<attackerLocStrings.length; i++)
@@ -480,8 +479,6 @@ class CheSSsk
                 // get needed data
                 let attackerNode = this._getNodeByString(attackerLocStrings[i]);
                 let dirAttackerToMe = this._getDirectionInRadians(attackerNode, currentNode);
-
-                console.log(dirMeToKing, dirAttackerToMe);
 
                 // skip if we do not share same direction to king
                 if (dirAttackerToMe !== dirMeToKing)
@@ -517,7 +514,7 @@ class CheSSsk
 
             // if attacker is queen, rook, or bishop, get direction to our king
             // and get moves that only share same direction
-            if (type == "Q" || type == "R" || type == "B") // can just use type since shorter
+            if (attackerNode.p.type == "Q" || attackerNode.p.type == "R" || attackerNode.p.type == "B")
             {
                 var attackerDirToKing = this._getDirectionInRadians( attackerNode, kingNode );
                 moves = moves.filter( 
