@@ -470,12 +470,14 @@ class CheSSsk
             // get our direction to our king
             var dirMeToKing = this._getDirectionInRadians(currentNode, kingNode);
 
+            // get the actual locations by ID
+            var attackerLocStrings = this._getNodeStringsByPieceIDs(ourAttackers);
+
             // go through our attackers and compare directions
-            for (var i=0; i<ourAttackers.length; i++)
+            for (var i=0; i<attackerLocStrings.length; i++)
             {
                 // get needed data
-                let [ color, type, col, row ] = ourAttackers[i].split('');
-                let attackerNode = this._getNodeByString(col+row);
+                let attackerNode = this._getNodeByString(attackerLocStrings[i]);
                 let dirAttackerToMe = this._getDirectionInRadians(attackerNode, currentNode);
 
                 console.log(dirMeToKing, dirAttackerToMe);
@@ -510,8 +512,7 @@ class CheSSsk
         if (kingAttackers.length > 0)
         {
             // get our king attacker data
-            let [ color, type, col, row ] = kingAttackers[0].split('');
-            var attackerNode = this._getNodeByString(col+row);
+            var attackerNode = this._getNodeByString( this._getNodeStringsByPieceIDs(ourAttackers)[0] );
 
             // if attacker is queen, rook, or bishop, get direction to our king
             // and get moves that only share same direction
@@ -789,12 +790,14 @@ class CheSSsk
             }
         );
 
+        // get actual location strings
+        var attackerStrings = this._getNodeStringsByPieceIDs(kingAttackers);
+
         // go through each attacker if they exist
-        for (var i=0; i<kingAttackers.length; i++)
+        for (var i=0; i<attackerStrings.length; i++)
         {
             // get our king attacker data
-            var [ color, type, col, row ] = kingAttackers[i].split('');
-            var attackerNode = this._getNodeByString(col+row);
+            var attackerNode = this._getNodeByString(attackerStrings[i]);
             var attackerDirToKing = this._getDirectionInRadians( attackerNode, node );
 
             // strip moves that are still in line with that attacking piece
