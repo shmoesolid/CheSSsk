@@ -474,9 +474,11 @@ class CheSSsk
             for (var i=0; i<ourAttackers.length; i++)
             {
                 // get needed data
-                var [ type, color, col, row ] = ourAttackers[i].split('');
-                var attackerNode = this._getNodeByString(col+row);
-                var dirAttackerToMe = this._getDirectionInRadians(attackerNode, currentNode);
+                let [ color, type, col, row ] = ourAttackers[i].split('');
+                let attackerNode = this._getNodeByString(col+row);
+                let dirAttackerToMe = this._getDirectionInRadians(attackerNode, currentNode);
+
+                console.log(dirMeToKing, dirAttackerToMe);
 
                 // skip if we do not share same direction to king
                 if (dirAttackerToMe !== dirMeToKing)
@@ -508,7 +510,7 @@ class CheSSsk
         if (kingAttackers.length > 0)
         {
             // get our king attacker data
-            var [ type, color, col, row ] = kingAttackers[0].split('');
+            let [ color, type, col, row ] = kingAttackers[0].split('');
             var attackerNode = this._getNodeByString(col+row);
 
             // if attacker is queen, rook, or bishop, get direction to our king
@@ -791,7 +793,7 @@ class CheSSsk
         for (var i=0; i<kingAttackers.length; i++)
         {
             // get our king attacker data
-            var [ type, color, col, row ] = kingAttackers[i].split('');
+            var [ color, type, col, row ] = kingAttackers[i].split('');
             var attackerNode = this._getNodeByString(col+row);
             var attackerDirToKing = this._getDirectionInRadians( attackerNode, node );
 
