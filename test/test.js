@@ -1,7 +1,9 @@
-const config = require("../config");
 
-var string = "BqH0";
-console.log( string.match(config.PREG_ID) );
+
+//const config = require("../config");
+
+// var string = "BqH0";
+// console.log( string.match(config.PREG_ID) );
 
 // const CheSSsk = require("../");
 

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<!-- created to be a visual representation of of board data after logic run in generateBoardData.js -->
+
+<html>
+    <head>
+        <title>CheSSsk Test</title>
+        <style>
+            /* board variables */
+            :root
+            {
+                /* default color theme */
+                --light-color: #ccc;
+                --dark-color: #378a24;
+                --border-color: #000;
+
+                /* size variables */
+                --cell-size: 64px;
+                --border-size: 10px;
+                --board-size: calc(var(--cell-size) * 8);
+            }
+
+            /* border wrapper setup */
+            .board_border 
+            {
+                float: left; 
+                width: calc(var(--board-size)); /*  + var(--border-size) * 2); */
+                height: calc(var(--board-size)); /* + var(--border-size) * 2); */
+                border: solid var(--border-color) var(--border-size);
+            }
+
+            /* actual board */
+            table#t01
+            {
+                border-collapse: collapse;
+            }
+            table#t01 td
+            {
+                width: var(--cell-size);
+                height: var(--cell-size);
+                padding: 0;
+            }
+            table#t01 tr:nth-child(odd) td:nth-child(even) { background: var(--dark-color); }
+            table#t01 tr:nth-child(even) td:nth-child(odd) { background: var(--dark-color); }
+            table#t01 tr:nth-child(even) td:nth-child(even) { background: var(--light-color); }
+            table#t01 tr:nth-child(odd) td:nth-child(odd) { background: var(--light-color); }
+        </style>
+    </head>
+    <body>
+        <div class="board_border">
+            <div id="board" onmousemove="handleMouseMove(event)" onclick="handleMouseClick(event)" style='position:relative;'>
+                <table id="t01">
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                    <tr><td /><td /><td /><td /><td /><td /><td /><td /></tr>
+                </table>
+            </div>
+        </div>
+        <div style="float:left;border:1px solid red">
+            Mouse Coords: <div id="mouseData">none</div><br />
+            Cell Data: <div id="cellData">none</div><br />
+        </div>
+
+        <!-- to get var, update generateBoardData.js and run in node -->
+        <script src="board_data.js"></script>
+        <script>
+
+            // CheSSsk grid data
+            var grid = JSON.parse(boardData);
+
+            // references
+            var root = document.documentElement;
+            var boardElm = document.getElementById("board");
+            var piecesElm = document.getElementById("pieces");
+            var mouseDataElm = document.getElementById("mouseData");
+            var cellDataElm = document.getElementById("cellData");
+
+            // ..
+            var black = { onBottom: false, player: false };
+            var cellSize = getComputedStyle(root).getPropertyValue("--cell-size").slice(0, -2); // removes 'px'
+            var maxCellSize = 64;
+
+            function clamp(num, min, max) 
+            {
+                return Math.min(Math.max(num, min), max);
+            }
+
+            function floorBySize(num) 
+            {
+                return Math.floor(num / cellSize);
+            }
+
+            function getDisplayCoords(node) {
+                // test
+                var imageWidth = (cellSize/maxCellSize) * 40; // FOR NOW (IMAGE SIZE KNOWN)
+                var imageHeight = (cellSize/maxCellSize) * 40; // FOR NOW (IMAGE SIZE KNOWN)
+                var xDisp, yDisp;
+
+                if (black.onBottom && black.player) {
+                    // x moves with board and needs inverse
+                    xDisp = cellSize * 8 - node.x * cellSize - imageWidth - imageWidth / 4;
+
+                    // y moves with board
+                    yDisp = node.y * cellSize + imageWidth / 4;
+                } else {
+                    // x moves with board
+                    xDisp = node.x * cellSize + imageWidth / 4;
+
+                    // y moves with board and needs to be inversed
+                    yDisp = cellSize * 8 - node.y * cellSize - imageHeight - imageHeight / 4;
+                }
+
+                // return data in object
+                return { top: yDisp, left: xDisp };
+            }
+
+            function renderPieces()
+            {
+                for (var x = 0; x < 8; x++)
+                {
+                    for (var y = 0; y < 8; y++)
+                    {
+                        // readability
+                        var nodeData = grid[x][y];
+
+                        // skip if no piece
+                        if (nodeData.p === null)
+                            continue;
+
+                        // get needed vars
+                        var c = nodeData.p.color.toLowerCase();
+                        var t = nodeData.p.type.toLowerCase();
+                        var display = getDisplayCoords(nodeData);
+
+                        // add to element
+                        boardElm.innerHTML += ``
+                            + `<img`
+                                + ` src='img/${c}${t}.gif'`
+                                + ` style='`
+                                    + `position:absolute;`
+                                    + `top:${display.top}px;`
+                                    + `left:${display.left}px;`
+                                    + `z-index:10;`
+                                + `'`
+                            + ` />`
+                        ;
+                    }
+                }
+            }
+
+            function getMouseData(event)
+            {  
+                var bounding = boardElm.getBoundingClientRect();
+                var x, y;
+
+                // black on bottom
+                if (black.onBottom && black.player) {
+                    x = Math.abs(event.clientX - bounding.right);
+                    y = event.clientY - bounding.top;
+                }
+
+                // white on bottom
+                else {
+                    x = event.clientX - bounding.left;
+                    y = Math.abs(event.clientY - bounding.bottom);
+                }
+
+                // contain x and y
+                x = clamp(x, 0, bounding.width - 1);
+                y = clamp(y, 0, bounding.height - 1);
+
+                // return
+                return [x,y];
+            }
+
+            function handleMouseClick(event)
+            {
+                // get mouse data
+                var [x, y] = getMouseData(event);
+
+                // get array indexes and keep x and y within range
+                var chessCol = floorBySize(x);
+                var chessRow = floorBySize(y);
+
+                // get node data
+                var nodeData = grid[ chessCol ][ chessRow ];
+
+                cellDataElm.innerHTML = `col: ${chessCol}, row: ${chessRow}<br />`
+                    //+ `Attackers: ${nodeData.`
+                ;
+
+                console.log(nodeData);
+            }
+
+            function handleMouseMove(event) 
+            {
+                // get mouse data and set element
+                var [x, y] = getMouseData(event);
+                mouseDataElm.innerHTML = `x: ${x}, y: ${y}`;
+            }
+        </script>
+        <script>
+            renderPieces();
+        </script>
+    </body>
+</html>

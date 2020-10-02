@@ -71,7 +71,7 @@ class CheSSsk
      * @param {string} color 
      * @param {string} locString 
      */
-    debug_addPiece(piece, color, locString)
+    debug_addPiece(piece, color, locString, hasMoved=false)
     {
         if (!locString.match(config.PREG_LOCATION))
             throw "debug_addPiece bad location format";
@@ -80,10 +80,22 @@ class CheSSsk
         col = LETTER_TO_NUM[ col ];
         row -= 1;
 
-        if ( this._isOutBounds(col, row) ) //if (typeof this._grid[ col ][ row ] === 'undefined')
+        if ( this._isOutBounds(col, row) )
             throw "debug_addPiece bad grid location";
 
-        this._grid[ col ][ row ] = new Piece(piece, color, locString);
+        this._grid[ col ][ row ].p = new Piece(piece, color, locString);
+        this._grid[ col ][ row ].p.hasMoved = hasMoved;
+    }
+
+    /** debug_updateAttackers
+     * establish board wide attackers after freshly adding pieces
+     * 
+     */
+    debug_updateAttackers()
+    {
+        for (var x = 0; x < 8; x++)
+            for (var y = 0; y < 8; y++)
+                this.getValidMoves( NUM_TO_LETTER[x] + (y+1), UpdateAttackers.ADD_SELF);
     }
 
     /** setGridFromJSON
@@ -236,7 +248,7 @@ class CheSSsk
     move(from, to, enPassant = "", forceMove = false)
     {
         // copy without reference just in case we have to fallback
-        const gridCopy = this._grid.splice();
+        //const gridCopy = this._grid.splice();
 
         // get valid moves for from location
         var response = this.getValidMoves(from);
@@ -394,30 +406,75 @@ class CheSSsk
         if (currentNode.p == null)
             return { status: "NULL_PIECE", message: config.MESSAGE["NULL_PIECE"] };
 
+        // prime moves var
+        var moves;
+
         // know what kind of piece we are moving so we can setup proper algo
         switch ( currentNode.p.type )
         {
             case "K": // king
-                return { status: "OK", results: this._getKingMoves( currentNode, updateAttackers )};
+                moves = this._getKingMoves( currentNode, updateAttackers ); 
+                break;
 
             case "Q": // queen
-                return { status: "OK", results: this._getAllDirections( currentNode, updateAttackers )};
+                moves = this._getAllDirections( currentNode, updateAttackers ); 
+                break;
 
             case "B": // bishop
-                return { status: "OK", results: this._getDiagnals( currentNode, updateAttackers )};
+                moves = this._getDiagnals( currentNode, updateAttackers );
+                break;
 
             case "N": // knight
-                return { status: "OK", results: this._getKnightMoves( currentNode, updateAttackers )};
+                moves = this._getKnightMoves( currentNode, updateAttackers );
+                break;
 
             case "R": // rook
-                return { status: "OK", results: this._getVertHorz( currentNode, updateAttackers )};
+                moves = this._getVertHorz( currentNode, updateAttackers );
+                break;
 
             case "P": // pawn
-                return { status: "OK", results: this._getPawnMoves( currentNode, updateAttackers, enPassant )};
+                moves = this._getPawnMoves( currentNode, updateAttackers, enPassant );
+                break;
 
             default:
                 return { status: "INVALID_TYPE", message: config.MESSAGE["INVALID_TYPE"] };
         }
+
+        // TODO handle check of our king if not moving our king
+        // ..
+
+        // return if we are the king, below doesn't matter
+        if ( currentNode.p.type === "K")
+            return { status: "OK", results: moves };
+        
+        // need to get our node's opposite color attackers
+        var ourAttackers = currentNode.getAttackers({ 
+            color: (currentNode.p.color === "W") ? "B" : "W", // opposite color
+            types: ["R", "B", "Q"] // only rooks/bishops/queen are needed for this
+        });
+
+        // confirm we have attackers
+        if (ourAttackers.length > 0)
+        {
+            // get our king's node
+            var kingNode = this._getKingNode(currentNode.p.color);
+
+            // get our direction to the king
+            var dirToKing = Math.atan2( kingNode.y - currentNode.y, kingNode.x - currentNode.x );
+            
+        }
+
+        // need to get their directions they are attacking currentNode
+        // get currentNode's attacking direction to it's color king
+        // if those directions are matching then if we move off that line king will be in check
+        // so need to make sure our valid movements are those only along that axis
+
+        // need to get our king opposite color attackers
+        // typically should mostly be 1, rarely 2, never any more than that via standard rules
+        // if there are 2 attackers, only king moves allowed 
+        // if any of our valid moves so far corresponds with the position of the attacker then it is still 
+        // allowed for the kill, unless there is 2 then neither is allowed
+        
     }
 
     /** _getAllDirections
@@ -617,7 +674,7 @@ class CheSSsk
         var moves = [];
 
         // get if king is in check
-        var inCheck = this._isKingCheck(-1, node);
+        var inCheck = this._isKingCheck(node);
 
         // king has not moved or has moved but is in check
         // get all directions 1 space
@@ -832,26 +889,23 @@ class CheSSsk
         return moves;
     }
 
-    /** _isKingCheck
+    /** _getKingNode
      * 
-     * @param {string} color // upper case
+     * @param {string} color 
      */
-    _isKingCheck(color, node = null)
+    _getKingNode(color)
     {
-        // if we know where king is
-        if (node) return node.isEnemyAttacking(node.p.color);
-
         // setup vars
         var x, y, end;
 
         // set based on color
-        if (color == "W") x = 0, y = 0, end = 8;
-        else if (color == "B") x = 7, y = 7, end = -1;
-        else throw "_isKingCheck color string must be W or B";
-        
+        if (color === "W") x = 0, y = 0, end = 8;
+        else if (color === "B") x = 7, y = 7, end = -1;
+        else throw "_getKingNode color string must be W or B";
+
         // loop through grid, doing it this way should be quicker as
         // black king is mostly at the end if going forward
-        // go from 7 to 0 if black, go from 0 to 7 if white
+        // handle 7 to 0 if black, handle 0 to 7 if white
         // also work through all columns in each row instead of rows in each column
         while (y !== end) 
         {
@@ -862,17 +916,20 @@ class CheSSsk
                     && node.p.type === "K"
                     && node.p.color === color
                 ) {
-                    return node.isEnemyAttacking(color);
+                    return node;
                 }
                 x += (color == "W") ? 1 : -1;
             }
             y += (color == "W") ? 1 : -1;
         }
 
+        // if not returned by now, something wrong, king not on board, should NEVER be
+        throw "_getKingNode no matching king found on board!";
+
+        // HOLDING for now until above confirmed
         // error if not correct string passed
         // if (color !== "W" && color !== "B")
         //     throw "_isKingCheck color string must be W or B";
-
         // otherwise search for it
         // for (var x = 0; x < 8; x++)
         // {
@@ -887,9 +944,25 @@ class CheSSsk
         //         }
         //     }
         // }
+    }
 
-        // if not returned by now, something wrong, king not on board
-        throw "_isKingCheck no matching king found on board!";
+    /** _isKingCheck
+     * 
+     * @param {string} arg // upper case
+     * @param {Node} arg 
+     */
+    _isKingCheck(arg)
+    {
+        // get based on color
+        if (arg === "W" || arg === "B") 
+            return this._getKingNode(color).isEnemyAttacking(color);
+
+        // we know the node
+        else if (arg instanceof Node) 
+            return arg.isEnemyAttacking(arg.p.color);
+
+        // invalid parameter passed
+        throw "_isKingCheck color string must be W or B or a Node";
     }
 
     /** _removeAttackingSpaces

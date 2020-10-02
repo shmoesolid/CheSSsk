@@ -20,11 +20,29 @@ class Node
     }
 
     /** getAttackers
-     * simply returns our attackers array
+     * gets all node's attackers or filtered out by color and/or type
+     * 
+     * @param {object} filter
+     * 
+     * supports { color: string, types: array of strings }
      */
-    getAttackers()
+    getAttackers(filter = {})
     {
-        return this._attackers;
+        // no filter, return all
+        if (!filter)
+            return this._attackers;
+
+        // return mapped copy with items we want only
+        return this._attackers.map( id => {
+            if ((typeof filter.color === 'string' && id.charAt(0) == filter.color)
+                || (typeof filter.types !== 'undefined' 
+                    && Array.isArray(filter.types) 
+                    && filter.types.indexOf( id.charAt(1) ) !== -1
+                )
+            ) { 
+                return id;
+            }
+        });
     }
 
     /** isEnemyAttacking
