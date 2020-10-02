@@ -35,11 +35,14 @@ class Node
         // return mapped copy with items we want only
         var filteredAttackers = this._attackers.filter( id => 
                 (typeof filter.color === 'string' && id.charAt(0) == filter.color)
-                || (typeof filter.types !== 'undefined' 
+                && 
+                (typeof filter.types !== 'undefined' 
                     && Array.isArray(filter.types) 
                     && filter.types.indexOf( id.charAt(1) ) !== -1
                 )
         );
+
+        console.log(filteredAttackers);
 
         return filteredAttackers;
     }

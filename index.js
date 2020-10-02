@@ -440,13 +440,13 @@ class CheSSsk
                 return { status: "INVALID_TYPE", message: config.MESSAGE["INVALID_TYPE"] };
         }
 
-        // return if we are the king, below doesn't matter
-        if ( currentNode.p.type === "K")
-            return { status: "OK", results: moves };
-
         // return if we are updating (adding or removing) attackers
         if (updateAttackers != UpdateAttackers.NO)
             return { status: "OK", results: moves };
+
+        // return if we are the king, below doesn't matter
+        if ( currentNode.p.type === "K")
+            return { status: "OK", results: moves }
 
         // the below handles king check and restricts allowed movement
         // ie is the piece we're trying to move blocking an otherwise check?
@@ -499,11 +499,34 @@ class CheSSsk
             }
         );
         
-        // if there are 2 attackers, only king moves allowed 
-        // if any of our valid moves so far corresponds with the position of the attacker then it is still 
-        // allowed for the kill, unless there is 2 then neither is allowed
+        // if there are 2 opposite color attackers then only king moves allowed as any 
+        // other move is not going to solve this problem, it is impossible
+        if (kingAttackers.length == 2)
+            return { status: "OK", results: [] };
 
-        // test
+        // confirm we have an attacker on our king
+        if (kingAttackers.length > 0)
+        {
+            // get our king attacker data
+            var [ type, color, col, row ] = kingAttackers[0].split('');
+            var attackerNode = this._getNodeByString(col+row);
+
+            // if attacker is queen, rook, or bishop, get direction to our king
+            // and get moves that only share same direction
+            if (type == "Q" || type == "R" || type == "B") // can just use type since shorter
+            {
+                var attackerDirToKing = this._getDirectionInRadians( attackerNode, kingNode );
+                moves = moves.filter( 
+                    node => this._getDirectionInRadians( node, kingNode ) == attackerDirToKing
+                );
+            }
+            
+            // if attacker is pawn or knight (can't be other king)
+            // then only allow move that is specifically that piece's location
+            else moves = moves.filter( node => node == attackerNode );
+        }
+
+        // return resulting moves
         return { status: "OK", results: moves };
         
     }
@@ -751,6 +774,33 @@ class CheSSsk
         // strip all moves that put the king in check
         // allow only moves where enemy is not attacking
         moves = moves.filter( move => !move.isEnemyAttacking(node.p.color) );
+
+        if (updateAttackers != UpdateAttackers.NO)
+            return moves;
+
+        // need to get our king's opposite color attackers (r, b, q only)
+        var kingAttackers = node.getAttackers(
+            { 
+                color: (node.p.color === "W") ? "B" : "W", // opposite color
+                types: ["R", "B", "Q"] // only rooks/bishops/queen are needed for this
+            }
+        );
+
+        console.log("king attackers", kingAttackers);
+
+        // go through each attacker if they exist
+        for (var i=0; i<kingAttackers.length; i++)
+        {
+            // get our king attacker data
+            var [ type, color, col, row ] = kingAttackers[i].split('');
+            var attackerNode = this._getNodeByString(col+row);
+            var attackerDirToKing = this._getDirectionInRadians( attackerNode, node );
+
+            // strip moves that are still in line with that attacking piece
+            moves = moves.filter( 
+                moveNode => this._getDirectionInRadians( node, moveNode ) !== attackerDirToKing
+            );
+        }
 
         // return possible moves
         return moves;
