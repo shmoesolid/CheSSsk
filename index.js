@@ -472,6 +472,7 @@ class CheSSsk
 
             // get the actual locations by ID
             var attackerLocStrings = this._getNodeStringsByPieceIDs(ourAttackers);
+            console.log(attackerLocStrings);
 
             // go through our attackers and compare directions
             for (var i=0; i<attackerLocStrings.length; i++)
@@ -1109,8 +1110,7 @@ class CheSSsk
 
                 // convert and add if within out list
                 if (ids.indexOf(curNode.p._id) !== -1)
-                    rtnStrings.push(LETTER_TO_NUM[ x ] + (y-1));
-                    
+                    rtnStrings.push(NUM_TO_LETTER[ x ] + (y+1));
             }
         }
 
