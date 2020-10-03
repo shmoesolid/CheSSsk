@@ -464,6 +464,8 @@ class CheSSsk
             }
         );
 
+        console.log("our attackers", ourAttackers);
+
         // confirm we have attackers
         if (ourAttackers.length > 0)
         {
@@ -510,7 +512,7 @@ class CheSSsk
         if (kingAttackers.length > 0)
         {
             // get our king attacker data
-            var attackerNode = this._getNodeByString( this._getNodeStringsByPieceIDs(ourAttackers)[0] );
+            var attackerNode = this._getNodeByString( this._getNodeStringsByPieceIDs(kingAttackers)[0] );
 
             // if attacker is queen, rook, or bishop, get direction to our king
             // and get moves that only share same direction

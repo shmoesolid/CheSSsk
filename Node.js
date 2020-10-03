@@ -33,7 +33,7 @@ class Node
             return this._attackers;
 
         // copy attackers
-        var filtered = this._attackers.splice();
+        var filtered = this._attackers.slice();
 
         // do color first
         if (typeof filter.color === 'string')
