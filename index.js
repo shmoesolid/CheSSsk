@@ -95,7 +95,7 @@ class CheSSsk
     {
         for (var x = 0; x < 8; x++)
             for (var y = 0; y < 8; y++)
-                this.getValidMoves( NUM_TO_LETTER[x] + (y+1), UpdateAttackers.ADD_SELF);
+                this.getValidMoves( this._coordToString(x,y), UpdateAttackers.ADD_SELF);
     }
 
     /** setGridFromJSON
@@ -144,7 +144,7 @@ class CheSSsk
         // we set the data
         return true;
     }
-
+    
     /** getGridInJSON
      * converts array grid data into a json string for database saving
      */
@@ -164,7 +164,7 @@ class CheSSsk
             {
                 // assign to vars for readability
                 var currentNode = this._grid[ x ][ y ];
-                var locString = NUM_TO_LETTER[ x ] + (y+1);
+                var locString = this._coordToString(x,y);
 
                 // setup color based on Y (row) location in grid
                 var color = "";
@@ -231,7 +231,7 @@ class CheSSsk
         // this would have added all wrong attacking spaces as other pieces are needed to block our otherwise valid moves
         for (var x = 0; x < 8; x++)
             for (var y = 0; y < 8; y++)
-                this.getValidMoves( NUM_TO_LETTER[x] + (y+1), UpdateAttackers.ADD_SELF);
+                this.getValidMoves( this._coordToString(x,y), UpdateAttackers.ADD_SELF);
 
         // return grid array
         return this._grid;
@@ -360,23 +360,31 @@ class CheSSsk
         // update hasMoved bool
         destinationNode.p.hasMoved = true;
 
-        // .. TODO handle pawn on back row (needs to be separate method called)
-        // .. TODO handle returning whether pawn move caused enPassant
-
         // update our attacking spaces for our moved piece
         // and all the other attacking pieces for both old and new spaces
         this._addAttackingSpaces(to);
         this._addAttackingSpaces(oldNodeAttackers);
         this._addAttackingSpaces(newNodeAttackers);
 
-        // .. TODO check whether our move puts our own king in check
-        // if, after everything we did
+        // update whether we created enPassant opportunity
+        // already have enPassant var, just use that
+        enPassant = "";
+        if (destinationNode.p.type == "P"
+            && this._getDistance(currentNode, destinationNode) == 2
+        ) {
+            // we're a pawn and moved 2 spaces, get midpoint node and set string if legit
+            var midNode = this._getMidpointNode(currentNode, destinationNode);
+            if (midNode !== false) enPassant = this._coordToString(midNode.x, midNode.y);
+        }
+
+        // .. TODO handle pawn on back row
+        // .. TODO 
 
         // return with various updates
         return {
             status: "OK", 
             pieceTaken: removedPiece,
-            enPassant: "", // TODO
+            enPassant: enPassant,
             pawnExchange: "", // TODO
             kingInCheck: "" // TODO, move places other king in check
         };
@@ -1109,7 +1117,7 @@ class CheSSsk
 
                 // convert and add if within out list
                 if (ids.indexOf(curNode.p._id) !== -1)
-                    rtnStrings.push(NUM_TO_LETTER[ x ] + (y+1));
+                    rtnStrings.push(this._coordToString(x,y));
             }
         }
 
@@ -1175,6 +1183,49 @@ class CheSSsk
     _getDirectionInRadians(from, to)
     {
         return Math.atan2( to.y - from.y, to.x - from.x);
+    }
+
+    /** _getDistance
+     * 
+     * @param {Node} fromNode 
+     * @param {Node} toNode 
+     */
+    _getDistance(fromNode, toNode)
+    {
+        return Math.sqrt(Math.pow(toNode.x - fromNode.x, 2) + Math.pow(toNode.y - fromNode.y, 2));
+    }
+
+    /** _getMidpointNode
+     * 
+     * @param {Node} fromNode 
+     * @param {Node} toNode 
+     */
+    _getMidpointNode(fromNode, toNode)
+    {
+        // get midpoints
+        var x = (fromNode.x + toNode.x) / 2;
+        var y = (fromNode.y + toNode.y) / 2;
+
+        // return if not integers or if out of bounds
+        if (!Number.isInteger(x) 
+            || !Number.isInteger(y) 
+            || this._isOutBounds(x,y)
+        ) {
+            return false;
+        }
+        
+        // return the node
+        return this._grid[x][y];
+    }
+
+    /** _coordToString
+     * 
+     * @param {Number} x 
+     * @param {Number} y 
+     */
+    _coordToString(x, y)
+    {
+        return NUM_TO_LETTER[ x ] + (y+1);
     }
 }
 

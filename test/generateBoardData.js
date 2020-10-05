@@ -1,5 +1,8 @@
+const { setupMaster } = require('cluster');
 var fs = require('fs');
 const CheSSsk = require("../");
+
+//console.log(Math.random().toString().slice(2, 8));
 
 var game = new CheSSsk();
 game.debug_addPiece("B", "K", "h8", true);
