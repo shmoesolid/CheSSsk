@@ -4,21 +4,12 @@
  */
 
 // BUGS-TO-FIX
-// 
-// ->HAD ISSUE WITH ATTACKING SPACE CONTAINING NON-ATTACKING PIECE
 //
-// CAUSE: moving a piece in front of one that moves multiple spaces (ie queen, rook, bishop)
-// does NOT block them
-//
-// TO FIX: when moving a piece, need to go update all of the pieces attacking that node
-// confirm piece can move, get destination attackers, go through and remove all their attacking spaces
-// then move the piece and clear old node, go back through same attackers and add back the new attacks
-//
-// UPDATE: possibly fixed, needs live testing
-//
+// attacking space containing non-attacking piece.. confirmed fixed
 // pawn can kill north/south.. confirm fixed
 // king can move into check.. confirmed fixed
-// enpassant not functional.. should be once implemented database
+// enpassant should be functional now
+// king check updates should be functional now
 // 
 
 // my lib requires
@@ -366,27 +357,31 @@ class CheSSsk
         this._addAttackingSpaces(oldNodeAttackers);
         this._addAttackingSpaces(newNodeAttackers);
 
-        // update whether we created enPassant opportunity
+        // update whether we created enPassant opportunity or have pawn on back row
         // already have enPassant var, just use that
+        var pawnExchange = "";
         enPassant = "";
-        if (destinationNode.p.type == "P"
-            && this._getDistance(currentNode, destinationNode) == 2
-        ) {
+        if (destinationNode.p.type == "P") 
+        {
             // we're a pawn and moved 2 spaces, get midpoint node and set string if legit
-            var midNode = this._getMidpointNode(currentNode, destinationNode);
-            if (midNode !== false) enPassant = this._coordToString(midNode.x, midNode.y);
-        }
+            if (this._getDistance(currentNode, destinationNode) == 2)
+            {
+                var midNode = this._getMidpointNode(currentNode, destinationNode);
+                if (midNode !== false) enPassant = this._coordToString(midNode.x, midNode.y);
+            }
 
-        // .. TODO handle pawn on back row
-        // .. TODO 
+            // we're a pawn on the back row
+            else if (destinationNode.y == 0 || destinationNode.y == 7)
+                pawnExchange = this._coordToString(destinationNode.x, destinationNode.y);
+        }
 
         // return with various updates
         return {
             status: "OK", 
             pieceTaken: removedPiece,
             enPassant: enPassant,
-            pawnExchange: "", // TODO
-            kingInCheck: "" // TODO, move places other king in check
+            pawnExchange: pawnExchange,
+            kingInCheck: this._isKingCheck(destinationNode.p.color === "W" ? "B" : "W")
         };
     }
 
