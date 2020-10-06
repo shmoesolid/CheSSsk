@@ -240,9 +240,6 @@ class CheSSsk
      */
     move(from, to, enPassant = "", forceMove = false)
     {
-        // copy without reference just in case we have to fallback
-        //const gridCopy = this._grid.splice();
-
         // get valid moves for from location
         var response = this.getValidMoves(from);
 
@@ -377,29 +374,57 @@ class CheSSsk
                 pawnExchange = this._coordToString(destinationNode.x, destinationNode.y);
         }
 
-        // handle if other king's status
-        var kingStatus = 0; // not check
-        var kingNode = this._getKingNode(destinationNode.p.color === "W" ? "B" : "W");
-        var kingCheck = this._isKingCheck(kingNode);
-
-        // update status based on circumstance
-        if (kingCheck)
-        {
-            kingStatus = 1; // check
-
-            // don't want to run this unless king in check as it is a lot
-            if (this._isKingCheckmate(kingNode))
-                kingStatus = 2; // checkmate
-        }
-
         // return with various updates
         return {
             status: "OK", 
             pieceTaken: removedPiece,
             enPassant: enPassant,
             pawnExchange: pawnExchange,
-            kingStatus: kingStatus
+            kingStatus: this._getKingStatus(destinationNode.p.color === "W" ? "B" : "W")
         };
+    }
+
+    /** exchangePawn
+     * 
+     * @param {string} location 
+     * @param {string} piece 
+     */
+    exchangePawn(location, piece)
+    {
+        // gets current node that should contain a pawn on the back row
+        var node = this._getNodeByString(location);
+
+        // return if not a valid location
+        if (node === false)
+            return { status: "INVALID_LOCATION", message: config.MESSAGE["INVALID_LOCATION"] };
+
+        // confirm piece exists
+        if (node.p == null)
+            return { status: "NULL_PIECE", message: config.MESSAGE["NULL_PIECE"] };
+
+        // confirm piece removing is a pawn, new piece is valid, and location and color is valid
+        if (node.p.type !== "P" 
+            || (piece !== "Q" && piece !== "R" && piece !== "B" && piece !== "N")
+            || (node.y < 7 && node.y > 0)
+            || (node.y == 7 && node.p.color !== "W")
+            || (node.y == 0 && node.p.color !== "B")
+        ) {
+            return { status: "INVALID_PAWN_EXCHANGE", message: config.MESSAGE["INVALID_PAWN_EXCHANGE"] };
+        }
+
+        // this should be this easy
+        // should not have to remove any attacking spaces as a pawn on 
+        // back row shouldn't be able to attack anything
+        node.p = new Piece(piece, node.p.color, location);
+
+        // now just need to update attacking spaces with new piece data
+        this._addAttackingSpaces(location);
+
+        // return good status with update on other king
+        return { 
+            status: "OK", 
+            kingStatus: this._getKingStatus(node.p.color === "W" ? "B" : "W") 
+        }
     }
 
     /** getValidMoves
@@ -1034,6 +1059,29 @@ class CheSSsk
 
         // if not returned by now, something wrong, king not on board, should NEVER be
         throw "_getKingNode no matching king found on board!";
+    }
+
+    /** _getKingStatus
+     * 
+     * @param {string} color 
+     */
+    _getKingStatus(color)
+    {
+        // setup vars with needed data
+        var kingStatus = 0; // not check
+        var kingNode = this._getKingNode(color);
+
+        // update status based on circumstance
+        if (this._isKingCheck(kingNode))
+        {
+            kingStatus = 1; // check
+
+            // don't want to run this unless king in check as it is a lot
+            if (this._isKingCheckmate(kingNode))
+                kingStatus = 2; // checkmate
+        }
+
+        return kingStatus;
     }
 
     /** _isKingCheck
