@@ -3,14 +3,16 @@
  * Author: Shane Koehler
  */
 
+// TODO
+//
+// optimize, optimize, optimize!
+// enpassant should be functional now
+// king check/checkmate should be functional now
+// pawn on back row should be available now
+
 // BUGS-TO-FIX
 //
-// attacking space containing non-attacking piece.. confirmed fixed
-// pawn can kill north/south.. confirm fixed
-// king can move into check.. confirmed fixed
-// enpassant should be functional now
-// king check updates should be functional now
-// 
+// ..i'm sure i'll find some
 
 // my lib requires
 const config = require("./config");
@@ -375,13 +377,28 @@ class CheSSsk
                 pawnExchange = this._coordToString(destinationNode.x, destinationNode.y);
         }
 
+        // handle if other king's status
+        var kingStatus = 0; // not check
+        var kingNode = this._getKingNode(destinationNode.p.color === "W" ? "B" : "W");
+        var kingCheck = this._isKingCheck(kingNode);
+
+        // update status based on circumstance
+        if (kingCheck)
+        {
+            kingStatus = 1; // check
+
+            // don't want to run this unless king in check as it is a lot
+            if (this._isKingCheckmate(kingNode))
+                kingStatus = 2; // checkmate
+        }
+
         // return with various updates
         return {
             status: "OK", 
             pieceTaken: removedPiece,
             enPassant: enPassant,
             pawnExchange: pawnExchange,
-            kingInCheck: this._isKingCheck(destinationNode.p.color === "W" ? "B" : "W")
+            kingStatus: kingStatus
         };
     }
 
@@ -1036,6 +1053,45 @@ class CheSSsk
 
         // invalid parameter passed
         throw "_isKingCheck color string must be W or B or a Node";
+    }
+
+    /** _isKingCheckmate
+     * 
+     * @param {Node} kingNode
+     */
+    _isKingCheckmate(kingNode)
+    {
+        // start with king
+        var moves = this.getValidMoves(this._coordToString(kingNode.x, kingNode.y));
+        if (moves.status === "OK" && moves.results.length > 0)
+            return false;
+
+        // king can't move
+        // go through all nodes and check it's other pieces for blockers
+        for (var x = 0; x < 8; x++)
+        {
+            for (var y = 0; y < 8; y++)
+            {
+                // readability
+                var node = this._grid[x][y];
+
+                // skip if no piece, not king's color, or if king
+                if (node.p === null
+                    || node.p.color !== kingNode.p.color
+                    || node === kingNode
+                ) {
+                    continue;
+                }
+                
+                // get piece moves
+                moves = this.getValidMoves(this._coordToString(x,y));
+                if (moves.status === "OK" && moves.results.length > 0)
+                    return false;
+            }
+        }
+        
+        // no valid moves available at all, we are checkmate
+        return true;
     }
 
     /** _removeAttackingSpaces
