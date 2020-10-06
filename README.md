@@ -2,7 +2,18 @@
 
 ## Description
 
-A library for chess move validation based on location and board data
+*Still a WIP*
+
+A library for chess move validation based on location and board data.
+
+* Set up new game
+* Load game from database JSON string
+* Export board data to JSON string for saving
+* Get valid moves for pieces based on location
+* Make only valid moves for pieces
+* En passant
+* King check and checkmate status updates
+* Pawn exchange
 
 ## Example Usage
 
