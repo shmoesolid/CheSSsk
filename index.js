@@ -320,6 +320,17 @@ class CheSSsk
             this._addAttackingSpaces(pawnAttackers);
         }
 
+        // remove removed piece's king attacking spaces if rook taken and rook hasn't moved and if its king hasn't moved
+        if (removedPiece !== null && removedPiece.type === "R" && !removedPiece.hasMoved)
+        {
+            var kingNode = this._getKingNode(removedPiece.color);
+            if (!kingNode.p.hasMoved)
+            {
+                var kingString = this._coordToString(kingNode.x, kingNode.y);
+                this._removeAttackingSpaces(kingString);
+            }
+        }
+
         // get all pieces' locations attacking currentNode and destinationNode
         var oldNodeAttackers = this._getNodeStringsByPieceIDs(currentNode.getAttackers());
         var newNodeAttackers = this._getNodeStringsByPieceIDs(destinationNode.getAttackers());
@@ -362,6 +373,10 @@ class CheSSsk
         // update hasMoved bool
         destinationNode.p.hasMoved = true;
 
+        // add back removed rook piece's king attacking spaces
+        if (typeof kingString !== 'undefined' && kingString !== "") 
+            this._addAttackingSpaces(kingString);
+
         // update our attacking spaces for our moved piece
         // and all the other attacking pieces for both old and new spaces
         this._addAttackingSpaces(to);
@@ -384,19 +399,6 @@ class CheSSsk
             // we're a pawn on the back row
             else if (destinationNode.y == 0 || destinationNode.y == 7)
                 pawnExchange = this._coordToString(destinationNode.x, destinationNode.y);
-        }
-
-        // update removed piece's king attacking spaces if rook taken and rook hasn't moved and if its king hasn't moved
-        // this should be a temp workaround, maybe, i hope
-        if (removedPiece.type === "R" && !removedPiece.hasMoved)
-        {
-            var kingNode = this._getKingNode(removedPiece.color);
-            if (!kingNode.hasMoved)
-            {
-                var kingString = this._coordToString(kingNode.x, kingNode.y);
-                this._removeAttackingSpaces(kingString);
-                this._addAttackingSpaces(kingString);
-            }
         }
 
         // return with various updates
@@ -863,16 +865,24 @@ class CheSSsk
                 // assign for readability using the row (y) our king is on
                 var rookNode = this._grid[ col ][ node.y ];
 
-                // make sure piece exists and hasn't moved (pointless to confirm piece as rook too)
-                // and make sure there is no enemy piece attacking our rook
-                if ( rookNode.p != null && !rookNode.p.hasMoved ) 
-                {
-                    // set our direction based on which column
-                    var direction = (col == 0) ? Direction.W : Direction.E;
+                // set our direction based on which column
+                var direction = (col == 0) ? Direction.W : Direction.E;
 
-                    // try to move 2 spaces in corresponding direction
-                    moves = moves.concat( this._getMovesInDirection(node, direction, updateAttackers, 2));
+                // set spaces default 1
+                var spaces = 1;
+
+                // make sure piece exists and is rook and is our color and hasn't moved
+                // and make sure there is no enemy piece attacking our rook
+                if ( rookNode.p != null 
+                    && rookNode.p.type === "R" 
+                    && rookNode.p.color === node.p.color
+                    && !rookNode.p.hasMoved 
+                ) {
+                    spaces = 2; // try to move 2 spaces in corresponding direction
                 }
+
+                // get moves
+                moves = moves.concat( this._getMovesInDirection(node, direction, updateAttackers, spaces));
             }
         }
 
