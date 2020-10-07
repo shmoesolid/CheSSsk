@@ -12,7 +12,7 @@
 
 // BUGS-TO-FIX
 //
-// pawn did not remove itself from attacking space
+// if 2 blocking pieces to king..  the first piece can't move as it doesn't take into account the next blocking piece
 
 // my lib requires
 const config = require("./config");
@@ -536,12 +536,39 @@ class CheSSsk
                 
                 // we have an attacker that requires our attention
                 // we can only move in nodes that are inbetween attacker and our king
-                // can do this by simply comparing each move direction to king
-                moves = moves.filter( 
-                    node => 
-                        this._getDirectionInRadians( node, kingNode ) == dirMeToKing // move in same direction
-                        && this._getDistance( node, kingNode) <= this._getDistance( attackerNode, kingNode) // move isn't greater distance away
-                );
+                // if there's not another piece blocking
+                var modifier = currentNode.getDirection(kingNode, true);
+                var count = 1;
+                var filterMoves = true;
+                
+                do {
+                    // get node to check
+                    var checkX = currentNode.x + modifier.x * count;
+                    var checkY = currentNode.y + modifier.y * count;
+                    var checkNode = this._grid[ checkX ][ checkY ];
+
+                    // we are at our king node, no more checking
+                    if (checkNode === kingNode) 
+                        break;
+
+                    // see if we have another piece blocking, don't filter
+                    if (checkNode.p !== null) {
+                        filterMoves = false;
+                        break;
+                    }
+
+                    // increase and go again
+                    count++;
+
+                } while( true );
+
+                // only filter moves if there is no other piece blocking
+                if (filterMoves)
+                    moves = moves.filter( 
+                        node => 
+                            this._getDirectionInRadians( node, kingNode ) == dirMeToKing // move in same direction
+                            && this._getDistance( node, kingNode) <= this._getDistance( attackerNode, kingNode) // move isn't greater distance away
+                    );
             }
         }
 
@@ -658,6 +685,9 @@ class CheSSsk
     {
         // establish moves array
         var moves = [];
+
+        // NEW FUNCTION
+        //var [x, y] = this._getDirectionModifier(dir);
 
         // establish x and y
         var x = 0;

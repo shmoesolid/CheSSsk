@@ -90,6 +90,27 @@ class Node
         // if found, remove it
         if (key !== -1) this._attackers.splice(key, 1);
     }
+
+    /** getDirection
+     * 
+     * @param {Node} nodeTo
+     * @param {Boolean} normalized
+     */
+    getDirection(nodeTo, normalized=true)
+    {
+        // get direction
+        var x = nodeTo.x-this.x;
+        var y = nodeTo.y-this.y;
+
+        // normalize if desired
+        if (normalized) {
+            x = (x) ? x / x : 0;
+            y = (y) ? y / y : 0;
+        }
+        
+        // return
+        return {x,y};
+    }
 }
 
 module.exports = Node;
