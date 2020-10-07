@@ -12,7 +12,7 @@
 
 // BUGS-TO-FIX
 //
-// ..i'm sure i'll find some
+// pawn did not remove itself from attacking space
 
 // my lib requires
 const config = require("./config");
@@ -293,7 +293,8 @@ class CheSSsk
             }
 
             // remove our associated pawn attack points
-            var pawnString = NUM_TO_LETTER[ pawnNode.x ] + pawnNode.y;
+            //var pawnString = NUM_TO_LETTER[ pawnNode.x ] + pawnNode.y; // OLD not adjusting to string proper
+            var pawnString = this._coordToString(pawnNode.x, pawnNode.y);
             this._removeAttackingSpaces(pawnString);
         }
 
