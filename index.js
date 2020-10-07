@@ -2,17 +2,24 @@
  * 
  * Author: Shane Koehler
  */
+/*
 
-// TODO
-//
-// optimize, optimize, optimize!
-// enpassant should be functional now
-// king check/checkmate should be functional now
-// pawn on back row should be available now
+TODO
 
-// BUGS-TO-FIX
-//
-// if 2 blocking pieces to king..  the first piece can't move as it doesn't take into account the next blocking piece
+optimize, optimize, optimize!
+enpassant should be functional now
+king check/checkmate should be functional now
+pawn on back row should be available now
+
+BUGS-TO-FIX
+
+-if 2 blocking pieces to king..  the first piece can't move as it doesn't take into account the next blocking piece
+    *should be fixed now, forogt to abs the div so negs stay neg
+-if rook is taken and king hasn't moved..
+    king is still "attacking" the castling space..
+    king should never be attacking this to begin with?
+
+*/  
 
 // my lib requires
 const config = require("./config");
@@ -377,6 +384,19 @@ class CheSSsk
             // we're a pawn on the back row
             else if (destinationNode.y == 0 || destinationNode.y == 7)
                 pawnExchange = this._coordToString(destinationNode.x, destinationNode.y);
+        }
+
+        // update removed piece's king attacking spaces if rook taken and rook hasn't moved and if its king hasn't moved
+        // this should be a temp workaround, maybe, i hope
+        if (removedPiece.type === "R" && !removedPiece.hasMoved)
+        {
+            var kingNode = this._getKingNode(removedPiece.color);
+            if (!kingNode.hasMoved)
+            {
+                var kingString = this._coordToString(kingNode.x, kingNode.y);
+                this._removeAttackingSpaces(kingString);
+                this._addAttackingSpaces(kingString);
+            }
         }
 
         // return with various updates

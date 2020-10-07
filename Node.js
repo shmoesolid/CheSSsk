@@ -104,8 +104,8 @@ class Node
 
         // normalize if desired
         if (normalized) {
-            x = (x) ? x / x : 0;
-            y = (y) ? y / y : 0;
+            x = (x) ? x / Math.abs(x) : 0;
+            y = (y) ? y / Math.abs(y) : 0;
         }
         
         // return
