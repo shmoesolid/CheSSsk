@@ -12,11 +12,11 @@ game.debug_addPiece("B", "K", "a8", true);
 // game.debug_addPiece("W", "N", "c6", true);
 // game.debug_addPiece("W", "B", "c5", true);
 // game.debug_addPiece("W", "R", "b3", true);
-// game.debug_addPiece("W", "P", "b6", true);
-game.debug_addPiece("W", "P", "f8", true);
+game.debug_addPiece("B", "P", "c5", true);
+game.debug_addPiece("W", "P", "b2", false);
 game.debug_updateAttackers();
 
-console.log(game.exchangePawn("f8", "Q"));
+console.log(game.move("b2", "b4"));
 
 var string = game.getGridInJSON();
 

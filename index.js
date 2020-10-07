@@ -241,7 +241,7 @@ class CheSSsk
     move(from, to, enPassant = "", forceMove = false)
     {
         // get valid moves for from location
-        var response = this.getValidMoves(from);
+        var response = this.getValidMoves(from, 0, enPassant);
 
         // we aren't ok, return full response
         if (response.status !== "OK")
@@ -258,8 +258,12 @@ class CheSSsk
         // we have a legit move!  HOOORAAY
         // or being forced (only used in castling so far)
 
-        // get node if we have an enPassant location string and if our piece type moving is also a pawn
-        var enPassantNode = (enPassant !== "" && currentNode.p.type === "P") ? this._getNodeByString(enPassant) : false;
+        // get node if we have an enPassant location string and it matches our to spot and if our piece type moving is also a pawn
+        var enPassantNode = (
+            enPassant !== "" 
+            && enPassant === to
+            && currentNode.p.type === "P"
+        ) ? this._getNodeByString(enPassant) : false;
 
         // remove all our attacking spaces from current node
         this._removeAttackingSpaces(from);
@@ -997,20 +1001,20 @@ class CheSSsk
                     // friendly piece already ruled out in _getMovesInDirection if not updating attackers
                     if (move.p != null && move.p.color != node.p.color)
                         moves.push(move);
-                }
 
-                // handle en passant if string passed from database
-                else
-                {
-                    // get node by string
-                    var newNode = this._getNodeByString(enPassantLoc);
+                    // handle en passant if string passed from database
+                    else if (enPassantLoc !== "")
+                    {
+                        // get node by string
+                        var newNode = this._getNodeByString(enPassantLoc);
 
-                    // skip if node doesn't exist or if piece data isn't empty
-                    if (newNode === false || !newNode.p)
-                        return; // use return instead of continue in forEach loops
+                        // skip if node doesn't exist or if piece data isn't empty
+                        if (newNode === false || newNode.p !== null || newNode !== move)
+                            return; // use return instead of continue in forEach loops
 
-                    // add to moves array
-                    moves.push(newNode);
+                        // add to moves array
+                        moves.push(newNode);
+                    }
                 }
             }
         );
