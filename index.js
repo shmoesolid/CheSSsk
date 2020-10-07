@@ -513,8 +513,6 @@ class CheSSsk
             }
         );
 
-        console.log("our attackers", ourAttackers);
-
         // confirm we have attackers
         if (ourAttackers.length > 0)
         {
@@ -539,7 +537,9 @@ class CheSSsk
                 // we can only move in nodes that are inbetween attacker and our king
                 // can do this by simply comparing each move direction to king
                 moves = moves.filter( 
-                    node => this._getDirectionInRadians( node, kingNode ) == dirMeToKing
+                    node => 
+                        this._getDirectionInRadians( node, kingNode ) == dirMeToKing // move in same direction
+                        && this._getDistance( node, kingNode) <= this._getDistance( attackerNode, kingNode) // move isn't greater distance away
                 );
             }
         }
@@ -569,7 +569,9 @@ class CheSSsk
             {
                 var attackerDirToKing = this._getDirectionInRadians( attackerNode, kingNode );
                 moves = moves.filter( 
-                    node => this._getDirectionInRadians( node, kingNode ) == attackerDirToKing
+                    node =>
+                        this._getDirectionInRadians( node, kingNode ) == attackerDirToKing // move in same direction
+                        && this._getDistance( node, kingNode) <= this._getDistance( attackerNode, kingNode) // move isn't greater distance away
                 );
             }
             
